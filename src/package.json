@@ -1,0 +1,65 @@
+{
+  "name": "flight-console-webapi",
+  "version": "0.0.1",
+  "ignore": [
+    ".gitignore"
+  ],
+  "bin": "./index.js",
+  "description": "A Websocket to SSH2 gateway using term.js, socket.io, ssh2, and express",
+  "homepage": "https://github.com/openflighthpc/flight-console-webapi",
+  "keywords": [
+    "ssh",
+    "webssh",
+    "terminal",
+    "webterminal"
+  ],
+  "license": "SEE LICENSE IN FILE - LICENSE",
+  "private": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/openflighthpc/flight-console-webapi.git"
+  },
+  "engines": {
+    "node": ">= 10"
+  },
+  "bugs": {
+    "url": "https://github.com/openflighthpc/flight-console-webapi/issues"
+  },
+  "dependencies": {
+    "basic-auth": "~2.0.1",
+    "cidr-matcher": "2.1.1",
+    "colors": "~1.4.0",
+    "debug": "^4.1.1",
+    "express": "~4.17.1",
+    "express-session": "~1.17.0",
+    "morgan": "~1.9.1",
+    "read-config-ng": "^3.0.1",
+    "serve-favicon": "^2.5.0",
+    "socket.io": "2.2.0",
+    "ssh2": "~0.8.8",
+    "validator": "^12.2.0"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "test": "snyk test",
+    "watch": "nodemon index.js",
+    "standard": "standard --verbose --fix | snazzy",
+    "cleanmac": "find . -name '.DS_Store' -type f -delete",
+    "release": "standard-version"
+  },
+  "standard": {
+    "ignore": [
+      "bigip/*",
+      "screenshots/*",
+      "bin/*",
+      "build/*",
+      "workspace/*"
+    ]
+  },
+  "devDependencies": {
+    "nodaemon": "0.0.5",
+    "snazzy": "^8.0.0",
+    "standard": "^14.3.1",
+    "standard-version": "^7.1.0"
+  }
+}
