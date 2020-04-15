@@ -16,6 +16,8 @@ var menuData = '<a id="logBtn"><i class="fas fa-clipboard fa-fw"></i> Start Log<
 
 // public
 module.exports = function socket (socket) {
+  debugWebSSH2('SOCKET session %O', socket.request.session)
+
   // if websocket connection arrives without an express session, kill it
   if (!socket.request.session) {
     socket.emit('401 UNAUTHORIZED')

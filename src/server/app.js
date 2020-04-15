@@ -2,12 +2,14 @@
 /* jshint esversion: 6, asi: true, node: true */
 // app.js
 
+var debugWebSSH2 = require('debug')('WebSSH2')
 var path = require('path')
 var fs = require('fs')
 var nodeRoot = path.dirname(require.main.filename)
 var configPath = path.join(nodeRoot, 'config.json')
 console.log('WebSSH2 service reading config from: ' + configPath)
 var express = require('express')
+var cors = require('cors')
 var logger = require('morgan')
 
 // sane defaults if config.json or parts are missing
@@ -83,7 +85,8 @@ let config = {
   },
   accesslog: false,
   verify: false,
-  safeShutdownDuration: 300
+  // safeShutdownDuration: 300
+  safeShutdownDuration: 3
 }
 
 // test if config.json exists, if not provide error message but try to run
@@ -120,6 +123,10 @@ var expressOptions = require('./expressOptions')
 var favicon = require('serve-favicon');
 
 // express
+app.use(cors({
+  origin: true,
+  credentials: true,
+}))
 app.use(safeShutdownGuard)
 app.use(session)
 app.use(myutil.basicAuth)
@@ -136,7 +143,7 @@ app.get('/ssh/reauth', function (req, res, next) {
 
 // eslint-disable-next-line complexity
 app.get('/ssh/host/:host?', function (req, res, next) {
-  // res.sendFile(path.join(path.join(publicPath, 'client.htm')))
+  debugWebSSH2('APP setting session variables: %O %O', req.params, req.query);
   // capture, assign, and validated variables
   req.session.ssh = {
     host: (validator.isIP(req.params.host + '') && req.params.host) ||
@@ -175,6 +182,8 @@ app.get('/ssh/host/:host?', function (req, res, next) {
   }
   if (req.session.ssh.header.name) validator.escape(req.session.ssh.header.name)
   if (req.session.ssh.header.background) validator.escape(req.session.ssh.header.background)
+
+  res.status(200).send('OK')
 })
 
 // express error handling
