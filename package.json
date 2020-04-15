@@ -4,7 +4,7 @@
   "ignore": [
     ".gitignore"
   ],
-  "bin": "./index.js",
+  "bin": "./src/index.js",
   "description": "A Websocket to SSH2 gateway using term.js, socket.io, ssh2, and express",
   "homepage": "https://github.com/openflighthpc/flight-console-webapi",
   "keywords": [
@@ -41,9 +41,9 @@
     "validator": "^12.2.0"
   },
   "scripts": {
-    "start": "node index.js",
+    "start": "node src/index.js",
     "test": "snyk test",
-    "watch": "nodemon index.js",
+    "watch": "nodemon src/index.js",
     "standard": "standard --verbose --fix | snazzy",
     "cleanmac": "find . -name '.DS_Store' -type f -delete",
     "release": "standard-version"
@@ -59,6 +59,7 @@
   },
   "devDependencies": {
     "nodaemon": "0.0.5",
+    "nodemon": "^2.0.3",
     "snazzy": "^8.0.0",
     "standard": "^14.3.1",
     "standard-version": "^7.1.0"
