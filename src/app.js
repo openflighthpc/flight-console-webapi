@@ -34,16 +34,6 @@ let config = {
     keepaliveCountMax: 10,
     allowedSubnets: []
   },
-  terminal: {
-    cursorBlink: true,
-    scrollback: 10000,
-    tabStopWidth: 8,
-    bellStyle: 'sound'
-  },
-  header: {
-    text: null,
-    background: 'green'
-  },
   session: {
     name: 'WebSSH2',
     secret: 'mysecret'
@@ -161,24 +151,12 @@ apiRouter.get('/ssh/host/:host?', function (req, res, next) {
       req.query.port) || config.ssh.port,
     localAddress: config.ssh.localAddress,
     localPort: config.ssh.localPort,
-    header: {
-      name: req.query.header || config.header.text,
-      background: req.query.headerBackground || config.header.background
-    },
     algorithms: config.algorithms,
     keepaliveInterval: config.ssh.keepaliveInterval,
     keepaliveCountMax: config.ssh.keepaliveCountMax,
     allowedSubnets: config.ssh.allowedSubnets,
     term: (/^(([a-z]|[A-Z]|[0-9]|[!^(){}\-_~])+)?\w$/.test(req.query.sshterm) &&
       req.query.sshterm) || config.ssh.term,
-    terminal: {
-      cursorBlink: (validator.isBoolean(req.query.cursorBlink + '') ? myutil.parseBool(req.query.cursorBlink) : config.terminal.cursorBlink),
-      scrollback: (validator.isInt(req.query.scrollback + '', { min: 1, max: 200000 }) && req.query.scrollback) ? req.query.scrollback : config.terminal.scrollback,
-      tabStopWidth: (validator.isInt(req.query.tabStopWidth + '', { min: 1, max: 100 }) && req.query.tabStopWidth) ? req.query.tabStopWidth : config.terminal.tabStopWidth,
-      bellStyle: ((req.query.bellStyle) && (['sound', 'none'].indexOf(req.query.bellStyle) > -1)) ? req.query.bellStyle : config.terminal.bellStyle
-    },
-    allowreplay: config.options.challengeButton || (validator.isBoolean(req.headers.allowreplay + '') ? myutil.parseBool(req.headers.allowreplay) : false),
-    allowreauth: config.options.allowreauth || false,
     mrhsession: ((validator.isAlphanumeric(req.headers.mrhsession + '') && req.headers.mrhsession) ? req.headers.mrhsession : 'none'),
     serverlog: {
       client: config.serverlog.client || false,
@@ -187,8 +165,6 @@ apiRouter.get('/ssh/host/:host?', function (req, res, next) {
     readyTimeout: (validator.isInt(req.query.readyTimeout + '', { min: 1, max: 300000 }) &&
       req.query.readyTimeout) || config.ssh.readyTimeout
   }
-  if (req.session.ssh.header.name) validator.escape(req.session.ssh.header.name)
-  if (req.session.ssh.header.background) validator.escape(req.session.ssh.header.background)
 
   res.status(200).send('OK')
 })

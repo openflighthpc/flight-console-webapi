@@ -19,16 +19,6 @@
     "keepaliveCountMax": 10,
     "allowedSubnets": []
   },
-  "terminal": {
-    "cursorBlink": true,
-    "scrollback": 10000,
-    "tabStopWidth": 8,
-    "bellStyle": "sound"
-  },
-  "header": {
-    "text": null,
-    "background": "green"
-  },
   "session": {
     "name": "WebSSH2",
     "secret": "mysecret"
