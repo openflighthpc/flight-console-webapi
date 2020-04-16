@@ -71,10 +71,6 @@ let config = {
       'zlib'
     ]
   },
-  serverlog: {
-    client: false,
-    server: false
-  },
   accesslog: false,
   verify: false,
   // safeShutdownDuration: 300
@@ -158,10 +154,6 @@ apiRouter.get('/ssh/host/:host?', function (req, res, next) {
     term: (/^(([a-z]|[A-Z]|[0-9]|[!^(){}\-_~])+)?\w$/.test(req.query.sshterm) &&
       req.query.sshterm) || config.ssh.term,
     mrhsession: ((validator.isAlphanumeric(req.headers.mrhsession + '') && req.headers.mrhsession) ? req.headers.mrhsession : 'none'),
-    serverlog: {
-      client: config.serverlog.client || false,
-      server: config.serverlog.server || false
-    },
     readyTimeout: (validator.isInt(req.query.readyTimeout + '', { min: 1, max: 300000 }) &&
       req.query.readyTimeout) || config.ssh.readyTimeout
   }
