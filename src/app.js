@@ -39,8 +39,6 @@ let config = {
     secret: 'mysecret'
   },
   options: {
-    challengeButton: true,
-    allowreauth: true
   },
   algorithms: {
     kex: [

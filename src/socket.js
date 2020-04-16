@@ -49,12 +49,10 @@ module.exports = function socket (socket) {
   })
 
   conn.on('ready', function connOnReady () {
-    console.log('WebSSH2 Login: user=' + socket.request.session.username + ' from=' + socket.handshake.address + ' host=' + socket.request.session.ssh.host + ' port=' + socket.request.session.ssh.port + ' sessionID=' + socket.request.sessionID + '/' + socket.id + ' mrhsession=' + socket.request.session.ssh.mrhsession + ' allowreplay=' + socket.request.session.ssh.allowreplay + ' term=' + socket.request.session.ssh.term)
-    socket.emit('allowreauth', socket.request.session.ssh.allowreauth)
+    console.log('WebSSH2 Login: user=' + socket.request.session.username + ' from=' + socket.handshake.address + ' host=' + socket.request.session.ssh.host + ' port=' + socket.request.session.ssh.port + ' sessionID=' + socket.request.sessionID + '/' + socket.id + ' mrhsession=' + socket.request.session.ssh.mrhsession + ' term=' + socket.request.session.ssh.term)
     socket.emit('title', 'ssh://' + socket.request.session.ssh.host)
     socket.emit('footer', 'ssh://' + socket.request.session.username + '@' + socket.request.session.ssh.host + ':' + socket.request.session.ssh.port)
     socket.emit('status', 'SSH CONNECTION ESTABLISHED')
-    socket.emit('allowreplay', socket.request.session.ssh.allowreplay)
     conn.shell({
       term: socket.request.session.ssh.term,
       cols: termCols,
@@ -70,10 +68,6 @@ module.exports = function socket (socket) {
       })
       socket.on('control', function socketOnControl (controlData) {
         switch (controlData) {
-          case 'replayCredentials':
-            if (socket.request.session.ssh.allowreplay) {
-              stream.write(socket.request.session.userpassword + '\n')
-            }
           /* falls through */
           default:
             console.log('controlData: ' + controlData)
@@ -156,10 +150,9 @@ module.exports = function socket (socket) {
         console.log('WebSSH2 ' + 'error: Authentication failure'.red.bold +
           ' user=' + socket.request.session.username.yellow.bold.underline +
           ' from=' + socket.handshake.address.yellow.bold.underline)
-        socket.emit('allowreauth', socket.request.session.ssh.allowreauth)
         socket.emit('reauth')
       } else {
-        console.log('WebSSH2 Logout: user=' + socket.request.session.username + ' from=' + socket.handshake.address + ' host=' + socket.request.session.ssh.host + ' port=' + socket.request.session.ssh.port + ' sessionID=' + socket.request.sessionID + '/' + socket.id + ' allowreplay=' + socket.request.session.ssh.allowreplay + ' term=' + socket.request.session.ssh.term)
+        console.log('WebSSH2 Logout: user=' + socket.request.session.username + ' from=' + socket.handshake.address + ' host=' + socket.request.session.ssh.host + ' port=' + socket.request.session.ssh.port + ' sessionID=' + socket.request.sessionID + '/' + socket.id + ' term=' + socket.request.session.ssh.term)
         if (err) {
           theError = (err) ? ': ' + err.message : ''
           console.log('WebSSH2 error' + theError)
