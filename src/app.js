@@ -12,6 +12,8 @@ var express = require('express')
 var cors = require('cors')
 var logger = require('morgan')
 
+var apiRouter = express.Router();
+
 // sane defaults if config.json or parts are missing
 let config = {
   listen: {
@@ -136,13 +138,18 @@ app.disable('x-powered-by')
 // // favicon from root if being pre-fetched by browser to prevent a 404
 // app.use(favicon(path.join(publicPath,'favicon.ico')));
 
-app.get('/ssh/reauth', function (req, res, next) {
+apiRouter.get('/ssh/reauth', function (req, res, next) {
   var r = req.headers.referer || '/'
   res.status(401).send('<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=' + r + '"></head><body bgcolor="#000"></body></html>')
 })
 
+apiRouter.get('/ping', function(req, res, next) {
+  // XXX Add checking of credentials here.
+  res.status(200).send('OK');
+});
+
 // eslint-disable-next-line complexity
-app.get('/ssh/host/:host?', function (req, res, next) {
+apiRouter.get('/ssh/host/:host?', function (req, res, next) {
   debugWebSSH2('APP setting session variables: %O %O', req.params, req.query);
   // capture, assign, and validated variables
   req.session.ssh = {
@@ -185,6 +192,8 @@ app.get('/ssh/host/:host?', function (req, res, next) {
 
   res.status(200).send('OK')
 })
+
+app.use('/console/api', apiRouter);
 
 // express error handling
 app.use(function (req, res, next) {
