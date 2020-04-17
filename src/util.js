@@ -4,9 +4,8 @@
 
 // private
 require('colors') // allow for color property extensions in log messages
-var debug = require('debug')('WebSSH2')
-var Auth = require('basic-auth')
-var SSH = require('ssh2').Client
+const debug = require('debug')('flight:console')
+const Auth = require('basic-auth')
 
 const defaultCredentials = { username: null, password: null, privatekey: null }
 
@@ -17,7 +16,7 @@ exports.setDefaultCredentials = function (username, password, privatekey) {
 }
 
 exports.basicAuth = function basicAuth (req, res, next) {
-  var myAuth = Auth(req)
+  const myAuth = Auth(req)
   if (myAuth && myAuth.pass !== '') {
     req.session.username = myAuth.name
     req.session.userpassword = myAuth.pass
@@ -45,28 +44,3 @@ exports.basicAuth = function basicAuth (req, res, next) {
 exports.parseBool = function parseBool (str) {
   return (str.toLowerCase() === 'true')
 }
-
-
-function checkAuthentication(session) {
-  const result = new Promise((resolve, reject) => {
-    let rejected = false;
-    const conn = new SSH();
-
-    conn.on('ready', () => {
-      conn.end();
-      resolve();
-    });
-    conn.on('error', reject);
-    // XXX Duplicate connection options.
-    conn.connect({
-      host: session.ssh.host,
-      port: session.ssh.port,
-      username: session.username,
-      password: session.userpassword,
-    });
-  });
-
-  return result;
-}
-
-exports.checkAuthentication = checkAuthentication;

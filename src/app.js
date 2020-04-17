@@ -2,12 +2,12 @@
 /* jshint esversion: 6, asi: true, node: true */
 // app.js
 
-var debugWebSSH2 = require('debug')('WebSSH2')
+var debug = require('debug')('flight:console')
 var path = require('path')
 var fs = require('fs')
 var nodeRoot = path.dirname(require.main.filename)
 var configPath = path.join(nodeRoot, 'config.json')
-console.log('WebSSH2 service reading config from: ' + configPath)
+console.log('Flight Console reading config from: ' + configPath)
 var express = require('express')
 var cors = require('cors')
 var logger = require('morgan')
@@ -102,6 +102,7 @@ var app = express()
 var server = require('http').Server(app)
 var myutil = require('./util')
 myutil.setDefaultCredentials(config.user.name, config.user.password, config.user.privatekey)
+var checkAuthentication = require('./sshUtils').checkAuthentication;
 var validator = require('validator')
 var io = require('socket.io')(server, { serveClient: false, path: '/ssh/socket.io' })
 var socket = require('./socket')
@@ -134,7 +135,7 @@ apiRouter.get('/ping', function(req, res, next) {
 
 // eslint-disable-next-line complexity
 apiRouter.get('/ssh/host/:host?', function (req, res, next) {
-  debugWebSSH2('APP setting session variables: %O %O', req.params, req.query);
+  debug('APP setting session variables: %O %O', req.params, req.query);
   // capture, assign, and validated variables
   req.session.ssh = {
     host: (validator.isIP(req.params.host + '') && req.params.host) ||
@@ -156,10 +157,10 @@ apiRouter.get('/ssh/host/:host?', function (req, res, next) {
       req.query.readyTimeout) || config.ssh.readyTimeout
   }
 
-  myutil.checkAuthentication(req.session)
+  checkAuthentication(req.session)
     .then(() => { res.status(200).send('OK') })
     .catch((err) => {
-      debugWebSSH2('checkAuthentication failed: %o', err);
+      debug('checkAuthentication failed: %o', err);
       if (err.level === 'client-authentication') {
         res.status(401).send('Unauthorized');
       } else {
