@@ -156,7 +156,17 @@ apiRouter.get('/ssh/host/:host?', function (req, res, next) {
       req.query.readyTimeout) || config.ssh.readyTimeout
   }
 
-  res.status(200).send('OK')
+  myutil.checkAuthentication(req.session)
+    .then(() => { res.status(200).send('OK') })
+    .catch((err) => {
+      debugWebSSH2('checkAuthentication failed: %o', err);
+      if (err.level === 'client-authentication') {
+        res.status(401).send('Unauthorized');
+      } else {
+        res.status(500).send('Internal Server Error');
+      }
+    });
+
 })
 
 app.use('/console/api', apiRouter);
