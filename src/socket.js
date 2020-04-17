@@ -50,8 +50,6 @@ module.exports = function socket (socket) {
 
   conn.on('ready', function connOnReady () {
     console.log('WebSSH2 Login: user=' + socket.request.session.username + ' from=' + socket.handshake.address + ' host=' + socket.request.session.ssh.host + ' port=' + socket.request.session.ssh.port + ' sessionID=' + socket.request.sessionID + '/' + socket.id + ' mrhsession=' + socket.request.session.ssh.mrhsession + ' term=' + socket.request.session.ssh.term)
-    socket.emit('title', 'ssh://' + socket.request.session.ssh.host)
-    socket.emit('footer', 'ssh://' + socket.request.session.username + '@' + socket.request.session.ssh.host + ':' + socket.request.session.ssh.port)
     socket.emit('status', 'SSH CONNECTION ESTABLISHED')
     conn.shell({
       term: socket.request.session.ssh.term,
