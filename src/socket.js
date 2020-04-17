@@ -89,8 +89,10 @@ module.exports = function socket (socket) {
 
       stream.on('data', function streamOnData (data) { socket.emit('data', data.toString('utf-8')) })
       stream.on('close', function streamOnClose (code, signal) {
-        err = { message: ((code || signal) ? (((code) ? 'CODE: ' + code : '') + ((code && signal) ? ' ' : '') + ((signal) ? 'SIGNAL: ' + signal : '')) : undefined) }
-        SSHerror('STREAM CLOSE', err)
+        let messages = [];
+        if (code)   { messages.push(`CODE: ${code}`); }
+        if (signal) { messages.push(`SIGNAL: ${signal}`); }
+        SSHerror('STREAM CLOSE', { message: messages.join(' ') })
         conn.end()
       })
       stream.stderr.on('data', function streamStderrOnData (data) {
