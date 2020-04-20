@@ -18,7 +18,7 @@ Flight Console WebAPI requires a recent version of Node and `yarn`.
 The following will install from source using `git`:
 
 ```
-git clone https://github.com/alces-flight/flight-console-webapi.git
+git clone https://github.com/openflighthpc/flight-console-webapi.git
 cd flight-console-webapi
 yarn install
 yarn run build
