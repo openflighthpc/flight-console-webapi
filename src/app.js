@@ -170,7 +170,7 @@ apiRouter.get('/ssh/host/:host?', function (req, res, next) {
 
 })
 
-app.use('/console/api', apiRouter);
+app.use('/', apiRouter);
 
 // express error handling
 app.use(function (req, res, next) {
