@@ -3,6 +3,7 @@
     "ip": "0.0.0.0",
     "port": 2222
   },
+  "pidfile": "/tmp/console-webapi.pid",
   "user": {
     "name": null,
     "password": null,

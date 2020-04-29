@@ -20,6 +20,7 @@ let config = {
     ip: '0.0.0.0',
     port: 2222
   },
+  pidfile: '/tmp/console-webapi.pid',
   user: {
     name: null,
     password: null,
@@ -214,8 +215,9 @@ io.on('connection', function (socket) {
 
 const signals = ['SIGTERM', 'SIGINT']
 signals.forEach(signal => process.on(signal, function () {
-  if (shutdownMode) stop('Safe shutdown aborted, force quitting')
-  else if (connectionCount > 0) {
+  if (shutdownMode) {
+    stop('Safe shutdown aborted, force quitting');
+  } else if (connectionCount > 0) {
     var remainingSeconds = config.safeShutdownDuration
     shutdownMode = true
 
@@ -232,7 +234,9 @@ signals.forEach(signal => process.on(signal, function () {
         io.sockets.emit('shutdownCountdownUpdate', remainingSeconds)
       }
     }, 1000)
-  } else stop()
+  } else {
+    stop();
+  }
 }))
 
 // clean stop
@@ -240,8 +244,9 @@ function stop (reason) {
   shutdownMode = false
   if (reason) console.log('Stopping: ' + reason)
   if (shutdownInterval) clearInterval(shutdownInterval)
-  io.close()
-  server.close()
+  io.close();
+  server.close();
+  process.exit(0);
 }
 
 module.exports = { server: server, config: config }
