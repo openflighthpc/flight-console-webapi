@@ -1,0 +1,94 @@
+'use strict'
+
+const fs = require('fs');
+const path = require('path')
+
+const nodeRoot = path.dirname(require.main.filename)
+const configPath = path.join(nodeRoot, '..', 'etc', 'config.json')
+
+// Sane defaults if config.json is missing.
+const config = {
+  listen: {
+    ip: '0.0.0.0',
+    port: 2222
+  },
+  pidfile: null,
+  user: {
+    name: null,
+    password: null,
+    privatekey: null
+  },
+  ssh: {
+    host: null,
+    port: 22,
+    term: 'xterm-color',
+    readyTimeout: 20000,
+    keepaliveInterval: 120000,
+    keepaliveCountMax: 10,
+    allowedSubnets: []
+  },
+  session: {
+    name: 'WebSSH2',
+    secret: 'mysecret'
+  },
+  options: {
+  },
+  algorithms: {
+    kex: [
+      'ecdh-sha2-nistp256',
+      'ecdh-sha2-nistp384',
+      'ecdh-sha2-nistp521',
+      'diffie-hellman-group-exchange-sha256',
+      'diffie-hellman-group14-sha1'
+    ],
+    cipher: [
+      'aes128-ctr',
+      'aes192-ctr',
+      'aes256-ctr',
+      'aes128-gcm',
+      'aes128-gcm@openssh.com',
+      'aes256-gcm',
+      'aes256-gcm@openssh.com',
+      'aes256-cbc'
+    ],
+    hmac: [
+      'hmac-sha2-256',
+      'hmac-sha2-512',
+      'hmac-sha1'
+    ],
+    compress: [
+      'none',
+      'zlib@openssh.com',
+      'zlib'
+    ]
+  },
+  accesslog: false,
+  verify: false,
+  // safeShutdownDuration: 300
+  safeShutdownDuration: 3
+}
+
+function loadConfig() {
+  try {
+    if (fs.existsSync(configPath)) {
+      console.log('Reading config from: ' + configPath);
+      config = require('read-config-ng')(configPath)
+    } else {
+      console.error(
+        '\n\nERROR: Missing config ' + configPath +
+        ' Using default config: ' + JSON.stringify(config)
+      );
+      console.error('\n  See config.json.sample for details\n\n')
+    }
+  } catch (err) {
+    console.error(
+      '\n\nERROR: Missing config ' + configPath +
+      ' Using default config: ' + JSON.stringify(config)
+    );
+    console.error('\n  See config.json.sample for details\n\n')
+    console.error('ERROR:\n\n  ' + err)
+  }
+}
+
+loadConfig();
+module.exports = { config: config };

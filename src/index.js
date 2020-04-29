@@ -9,11 +9,13 @@
  */
 
 const npid = require('./pid');
-var config = require('./app').config
-var server = require('./app').server
+var config = require('./config').config;
+var server = require('./app').server;
 
-var pid = npid.create(config.pidfile);
-pid.removeOnExit();
+if (config.pidfile) {
+  var pid = npid.create(config.pidfile);
+  pid.removeOnExit();
+}
 
 process.on('uncaughtException', function(err) {
     console.log('Caught exception: ' + err);
