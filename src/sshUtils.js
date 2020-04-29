@@ -3,7 +3,7 @@
 const SSH = require('ssh2').Client;
 const debugSSH = require('debug')('ssh2');
 
-exports.checkAuthentication = function checkAuthentication(session) {
+function checkAuthentication(session) {
   const result = new Promise((resolve, reject) => {
     let rejected = false;
     const conn = new SSH();
@@ -13,7 +13,6 @@ exports.checkAuthentication = function checkAuthentication(session) {
       resolve();
     });
     conn.on('error', reject);
-    // XXX Duplicate connection options.
     const options = {
       ...connectionOptions(session),
       keepaliveInterval: 0,
@@ -43,4 +42,8 @@ function connectionOptions(session) {
     debug: debugSSH,
   };
 }
-exports.connectionOptions = connectionOptions;
+
+module.exports = {
+  checkAuthentication: checkAuthentication,
+  connectionOptions: connectionOptions,
+};

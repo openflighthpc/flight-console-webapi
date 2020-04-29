@@ -75,9 +75,15 @@ apiRouter.get('/ssh/host/:host?', function (req, res, next) {
     .catch((err) => {
       debug('checkAuthentication failed: %o', err);
       if (err.level === 'client-authentication') {
-        res.status(401).send('Unauthorized');
+        res
+          .status(401)
+          .header('Content-Type', 'application/json')
+          .send(JSON.stringify( { errors: [ { code: 'Unauthorized' } ]}));
       } else {
-        res.status(500).send('Internal Server Error');
+        res
+          .status(500)
+          .header('Content-Type', 'application/json')
+          .send(JSON.stringify( { errors: [ { code: 'Internal Server Error' } ]}));
       }
     });
 
@@ -87,12 +93,18 @@ app.use('/', apiRouter);
 
 // express error handling
 app.use(function (req, res, next) {
-  res.status(404).send("Sorry can't find that!")
+  res
+    .status(404)
+    .header('Content-Type', 'application/json')
+    .send(JSON.stringify( { errors: [ { code: 'Not Found' } ]}));
 })
 
 app.use(function (err, req, res, next) {
   console.error(err.stack)
-  res.status(500).send('Something broke!')
+  res
+    .status(500)
+    .header('Content-Type', 'application/json')
+    .send(JSON.stringify( { errors: [ { code: 'Internal Server Error' } ]}));
 })
 
 // socket.io
