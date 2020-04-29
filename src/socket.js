@@ -21,14 +21,6 @@ function isHostAllowed(sshConfig) {
 
   const matcher = new CIDRMatcher(allowedSubnets)
   const allowed = matcher.contains(sshConfig.host);
-  if (!allowed) {
-    console.log(
-      'Flight console ' +
-      'error: Requested host outside configured subnets / REJECTED'.red.bold +
-      ' user=' + session.username.yellow.bold.underline +
-      ' from=' + socket.handshake.address.yellow.bold.underline
-    );
-  }
   return allowed;
 }
 
@@ -48,6 +40,12 @@ module.exports = function socket (socket) {
   const sshConfig = session.ssh || {};
 
   if (!isHostAllowed(sshConfig)) {
+    console.log(
+      'Flight console ' +
+      'error: Requested host outside configured subnets / REJECTED'.red.bold +
+      ' user=' + session.username.yellow.bold.underline +
+      ' from=' + socket.handshake.address.yellow.bold.underline
+    );
     socket.emit('ssherror', '401 UNAUTHORIZED');
     socket.disconnect(true);
     return
