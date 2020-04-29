@@ -10,10 +10,10 @@ const logger = require('morgan');
 const socketIO = require('socket.io');
 const validator = require('validator');
 
+const auth = require('./auth')
 const checkAuthentication = require('./sshUtils').checkAuthentication;
 const config = require('./config').config;
 const expressOptions = require('./expressOptions')
-const utils = require('./util')
 const sshConnection = require('./sshConnection')
 
 const apiRouter = express.Router();
@@ -28,7 +28,7 @@ const session = require('express-session')({
 
 const app = express()
 const server = http.Server(app);
-utils.setDefaultCredentials(config.user.name, config.user.password, config.user.privatekey)
+auth.setDefaultCredentials(config.user.name, config.user.password, config.user.privatekey)
 
 // express
 app.use(cors({
@@ -37,12 +37,12 @@ app.use(cors({
 }));
 app.use(safeShutdownGuard);
 app.use(session);
-app.use(utils.basicAuth);
+app.use(auth.basicAuth);
 if (config.accesslog) { app.use(logger('common')); }
 app.disable('x-powered-by');
 
 apiRouter.get('/ping', function(req, res, next) {
-  // If we get here, utils.basicAuth has let us through.
+  // If we get here, the auth module has let us through.
   res.status(200).send('OK');
 });
 

@@ -26,8 +26,6 @@ function isHostAllowed(sshConfig) {
 
 // public
 module.exports = function socket (socket) {
-  debug('SOCKET session %O', socket.request.session)
-
   // If a websocket connection arrives without an express session, kill it.
   if (!socket.request.session) {
     socket.emit('401 UNAUTHORIZED')
