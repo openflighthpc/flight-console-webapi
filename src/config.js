@@ -7,7 +7,7 @@ const nodeRoot = path.dirname(require.main.filename)
 const configPath = path.join(nodeRoot, '..', 'etc', 'config.json')
 
 // Sane defaults if config.json is missing.
-const config = {
+const defaultConfig = {
   listen: {
     ip: '0.0.0.0',
     port: 2222
@@ -68,12 +68,14 @@ const config = {
   safeShutdownDuration: 3
 }
 
+let config;
 function loadConfig() {
   try {
     if (fs.existsSync(configPath)) {
       console.log('Reading config from: ' + configPath);
       config = require('read-config-ng')(configPath)
     } else {
+      config = defaultConfig;
       console.error(
         '\n\nERROR: Missing config ' + configPath +
         ' Using default config: ' + JSON.stringify(config)
@@ -81,6 +83,7 @@ function loadConfig() {
       console.error('\n  See config.json.sample for details\n\n')
     }
   } catch (err) {
+    config = defaultConfig;
     console.error(
       '\n\nERROR: Missing config ' + configPath +
       ' Using default config: ' + JSON.stringify(config)
