@@ -15,6 +15,7 @@ const checkAuthentication = require('./sshUtils').checkAuthentication;
 const config = require('./config').config;
 const expressOptions = require('./expressOptions')
 const sshConnection = require('./sshConnection')
+const ShutdownGuard = require('./shutdownGuard');
 
 const apiRouter = express.Router();
 
@@ -119,13 +120,10 @@ io.use(function (socket, next) {
 // bring up socket
 io.on('connection', sshConnection)
 
-// safe shutdown
-var shutdownMode = false
-var shutdownInterval = 0
-var connectionCount = 0
+const shutdownGuard = new ShutdownGuard(io, server, config.safeShutdownDuration);
 
 function safeShutdownGuard (req, res, next) {
-  if (shutdownMode) {
+  if (shutdownGuard.isShuttingDown) {
     res.status(503).end('Service unavailable: Server shutting down');
   } else {
     return next();
@@ -133,49 +131,16 @@ function safeShutdownGuard (req, res, next) {
 }
 
 io.on('connection', function (socket) {
-  connectionCount++
+  shutdownGuard.onConnection();
 
   socket.on('disconnect', function () {
-    if ((--connectionCount <= 0) && shutdownMode) {
-      stop('All clients disconnected')
-    }
+    shutdownGuard.onDisconnection();
   })
 })
 
 const signals = ['SIGTERM', 'SIGINT']
 signals.forEach(signal => process.on(signal, function () {
-  if (shutdownMode) {
-    stop('Safe shutdown aborted, force quitting');
-  } else if (connectionCount > 0) {
-    var remainingSeconds = config.safeShutdownDuration
-    shutdownMode = true
-
-    var message = (connectionCount === 1) ? ' client is still connected'
-      : ' clients are still connected'
-    console.error(connectionCount + message)
-    console.error('Starting a ' + remainingSeconds + ' seconds countdown')
-    console.error('Press Ctrl+C again to force quit')
-
-    shutdownInterval = setInterval(function () {
-      if ((remainingSeconds--) <= 0) {
-        stop('Countdown is over')
-      } else {
-        io.sockets.emit('shutdownCountdownUpdate', remainingSeconds)
-      }
-    }, 1000)
-  } else {
-    stop();
-  }
+  shutdownGuard.shutdown();
 }))
-
-// clean stop
-function stop (reason) {
-  shutdownMode = false
-  if (reason) console.log('Stopping: ' + reason)
-  if (shutdownInterval) clearInterval(shutdownInterval)
-  io.close();
-  server.close();
-  process.exit(0);
-}
 
 module.exports = { server: server }
