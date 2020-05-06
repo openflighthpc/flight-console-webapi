@@ -1,10 +1,10 @@
-# Flight Console WebAPI
+# Flight Console API
 
 A web API to provide browser access to an interactive terminal console.
 
 ## Overview
 
-Flight Console WebAPI is a web API that in conjunction with [Flight Console
+Flight Console API is a web API that in conjunction with [Flight Console
 Webapp](https://github.com/openflighthpc/flight-console-webapp) provides
 browser access to an interactive terminal console session within HPC
 environments.
@@ -13,13 +13,13 @@ environments.
 
 ### From source
 
-Flight Console WebAPI requires a recent version of Node and `yarn`.
+Flight Console API requires a recent version of Node and `yarn`.
 
 The following will install from source using `git`:
 
 ```
-git clone https://github.com/openflighthpc/flight-console-webapi.git
-cd flight-console-webapi
+git clone https://github.com/openflighthpc/flight-console-api.git
+cd flight-console-api
 yarn install
 yarn run build
 ```
@@ -31,7 +31,7 @@ XXX TBC.
 XXX TBC.
 
 Flight Runway provides a Ruby environment and command-line helpers for
-running openflightHPC tools.  Flight Console WebAPI integrates with Flight
+running openflightHPC tools.  Flight Console API integrates with Flight
 Runway to provide easier installation and configuration.
 
 To install Flight Runway, see the [Flight Runway installation
@@ -56,15 +56,15 @@ been installed and the environment activated with the `flight start` command.
     yum makecache
     ```
     
- * Install the `flight-console-webapi` RPM:
+ * Install the `flight-console-api` RPM:
 
     ```
-    [root@myhost ~]# yum install flight-console-webapi
+    [root@myhost ~]# yum install flight-console-api
     ```
 
  * Enable HTTPs support
 
-    Flight Console WebAPI is designed to operate over HTTPs connections.  You
+    Flight Console API is designed to operate over HTTPs connections.  You
     can enable HTTPs with self-signed certificates by running the commands
     below.  You will be asked to enter a passphrase and to answer some
     questions about your organization.
@@ -75,7 +75,7 @@ been installed and the environment activated with the `flight start` command.
 
  * Configure details about your cluster
 
-    Flight Console WebAPI needs to be configured with some details about the
+    Flight Console API needs to be configured with some details about the
     cluster it is providing access to.  This can be done with the `flight
     service configure` command as described below.  You will be asked to
     provide values for:
@@ -96,7 +96,7 @@ been installed and the environment activated with the `flight start` command.
     Once you have values for the above, you can configure the webapp by running:
 
     ```
-    [root@myhost ~]# flight service configure console-webapi
+    [root@myhost ~]# flight service configure console-api
     ```
 
 
@@ -133,7 +133,7 @@ or alternative license terms made available by Alces Flight Ltd -
 please direct inquiries about licensing to
 [licensing@alces-flight.com](mailto:licensing@alces-flight.com).
 
-Flight Console WebAPI is distributed in the hope that it will be
+Flight Console API is distributed in the hope that it will be
 useful, but WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, EITHER
 EXPRESS OR IMPLIED INCLUDING, WITHOUT LIMITATION, ANY WARRANTIES OR
 CONDITIONS OF TITLE, NON-INFRINGEMENT, MERCHANTABILITY OR FITNESS FOR

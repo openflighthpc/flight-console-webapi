@@ -1,8 +1,8 @@
-# Contributing to Flight Console WebAPI
+# Contributing to Flight Console API
 
 :+1::tada: Thanks for taking the time to contribute! :tada::+1:
 
-You want to contribute to Flight Console WebAPI? Welcome! Please read this
+You want to contribute to Flight Console API? Welcome! Please read this
 document to understand what you can do:
 
  * [Code of Conduct](#code-of-conduct)
@@ -27,12 +27,12 @@ behaviour to [help@openflighthpc.org](mailto:help@openflighthpc.org).
 
 ## Help Others
 
-You can help Flight Console WebAPI by helping others who use it and need support.
+You can help Flight Console API by helping others who use it and need support.
 
 ## Analyse Issues
 
 Analysing issue reports can be a lot of effort. Any help is welcome!
-Go to [the GitHub issue tracker](https://github.com/openflighthpc/flight-console-webapi/issues?state=open)
+Go to [the GitHub issue tracker](https://github.com/openflighthpc/flight-console-api/issues?state=open)
 and find an open issue which needs additional work or a bugfix
 (e.g. issues labeled with "help wanted" or "bug").
 
@@ -42,13 +42,13 @@ even find and [contribute](#contribute-changes) a bugfix?
 
 ## Report an Issue
 
-If you find a bug - behaviour of Flight Console WebAPI code or documentation
+If you find a bug - behaviour of Flight Console API code or documentation
 contradicting your expectation - you are welcome to report it. We can
 only handle well-reported, actual bugs, so please follow the
 guidelines below.
 
 Once you have familiarised with the guidelines, you can go to the
-[GitHub issue tracker for Flight Console WebAPI](https://github.com/openflighthpc/flight-console-webapi/issues/new)
+[GitHub issue tracker for Flight Console API](https://github.com/openflighthpc/flight-console-api/issues/new)
 to report the issue.
 
 ### Quick Checklist for Bug Reports
@@ -79,13 +79,13 @@ before it can be exploited.  Please send the related information to
 
 ### Issue Reporting Disclaimer
 
-We want to improve the quality of Flight Console WebAPI and good bug reports are
+We want to improve the quality of Flight Console API and good bug reports are
 welcome! However, our capacity is limited, thus we reserve the right
 to close or to not process bug reports with insufficient detail in
 favour of those which are very cleanly documented and easy to
 reproduce. Even though we would like to solve each well-documented
 issue, there is always the chance that it will not happen - remember:
-Flight Console WebAPI is Open Source and comes without warranty.
+Flight Console API is Open Source and comes without warranty.
 
 Bug report analysis support is very welcome! (e.g. pre-analysis or
 proposing solutions)
@@ -93,7 +93,7 @@ proposing solutions)
 ## Contribute Changes
 
 You are welcome to contribute code, content or documentation to
-Flight Console WebAPI in order to fix bugs or to implement new features.
+Flight Console API in order to fix bugs or to implement new features.
 
 There are three important things to know:
 
@@ -103,7 +103,7 @@ There are three important things to know:
    projects.
 2. **Not all proposed contributions can be accepted**. Some features
    may e.g. just fit a third-party add-on better. The change must fit
-   the overall direction of Flight Console WebAPI and really improve it. The more
+   the overall direction of Flight Console API and really improve it. The more
    effort you invest, the better you should clarify in advance whether
    the contribution fits: the best way would be to just open an issue
    to discuss the feature you plan to implement (make it clear you
@@ -114,11 +114,11 @@ There are three important things to know:
 When you contribute (code, documentation, or anything else), you have
 to be aware that your contribution is covered by the same [Eclipse
 Public License 2.0](https://opensource.org/licenses/EPL-2.0) that is
-applied to Flight Console WebAPI itself.
+applied to Flight Console API itself.
 
 In particular you need to agree to the Contributor License Agreement,
 which can be [found
-here](https://www.clahub.com/agreements/openflighthpc/flight-console-webapi). This
+here](https://www.clahub.com/agreements/openflighthpc/flight-console-api). This
 applies to all contributors, including those contributing on behalf of
 a company. If you agree to its content, you simply have to click on
 the link posted by the CLA assistant available on the pull
@@ -152,7 +152,7 @@ the CLA in the meantime.
    and accept it, as described in detail above.
 8. Wait for our code review and approval, possibly enhancing your
    change on request.
-    - Note that the Flight Console WebAPI developers also have their regular
+    - Note that the Flight Console API developers also have their regular
       duties, so depending on the required effort for reviewing,
       testing and clarification this may take a while.
 9. Once the change has been approved we will inform you in a comment.

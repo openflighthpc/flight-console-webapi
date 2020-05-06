@@ -1,12 +1,12 @@
 {
-  "name": "flight-console-webapi",
+  "name": "flight-console-api",
   "version": "0.0.1",
   "ignore": [
     ".gitignore"
   ],
   "bin": "./src/index.js",
   "description": "A Websocket to SSH2 gateway using term.js, socket.io, ssh2, and express",
-  "homepage": "https://github.com/openflighthpc/flight-console-webapi",
+  "homepage": "https://github.com/openflighthpc/flight-console-api",
   "keywords": [
     "ssh",
     "webssh",
@@ -17,13 +17,13 @@
   "private": false,
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/openflighthpc/flight-console-webapi.git"
+    "url": "git+https://github.com/openflighthpc/flight-console-api.git"
   },
   "engines": {
     "node": ">= 10"
   },
   "bugs": {
-    "url": "https://github.com/openflighthpc/flight-console-webapi/issues"
+    "url": "https://github.com/openflighthpc/flight-console-api/issues"
   },
   "dependencies": {
     "basic-auth": "~2.0.1",
