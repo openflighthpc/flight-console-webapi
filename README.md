@@ -24,11 +24,7 @@ yarn install
 yarn run build
 ```
 
-XXX TBC.
-
 ### Installing with Flight Runway
-
-XXX TBC.
 
 Flight Runway provides a Ruby environment and command-line helpers for
 running openflightHPC tools.  Flight Console API integrates with Flight
@@ -73,45 +69,49 @@ been installed and the environment activated with the `flight start` command.
     [root@myhost ~]# flight www enable-https
     ```
 
- * Configure details about your cluster
-
-    Flight Console API needs to be configured with some details about the
-    cluster it is providing access to.  This can be done with the `flight
-    service configure` command as described below.  You will be asked to
-    provide values for:
-
-    **Cluster name**: set it to a string that identifies this cluster in a
-    human friendly way.
-
-    **Cluster description**: set it to a string that describes this cluster in
-    a human friendly way.
-
-    **Cluster logo URL**: Optionally, set it to the URL for a logo for this
-    cluster.  Or leave it unset.
-
-    **Hostname or IP address**: set this to either the fully qualified
-    hostname for your server or its IP address.  If using the hostname, make
-    sure that it can be resolved correctly.
-
-    Once you have values for the above, you can configure the webapp by running:
-
-    ```
-    [root@myhost ~]# flight service configure console-api
-    ```
-
-
 ## Configuration
 
-XXX TBC
+### When installed with Flight Runway
+
+By default, Flight Console API does not need any configuration.  If you wish
+to configure it, you may do so by editing the configuration file located at
+`/opt/flight/opt/console-api/etc/config.json`
+
+
+### When installed from source
+
+By default, Flight Console API does not need any configuration.  If you wish
+to configure it, you may do so by editing or creating the configuration file
+located at `etc/config.json` relative to the Flight Console API source code
+directory.
 
 ## Operation
 
-Open your browser and visit the URL for your cluster with path `/console`.
-E.g., if you have installed on a machine called `my.cluster.com` visit the URL
-https://my.cluster.com/console.
+### When installed with Flight Runway
 
-Enter your username and password for the cluster.  You will then have access
-to a terminal session running on your cluster.
+The server can be started by running the following command:
+
+```
+[root@myhost ~]# flight service start console-api
+```
+
+The server can be stopped by running the following command:
+
+```
+[root@myhost ~]# flight service stop console-api
+```
+
+### When installed from source
+
+The server can be started by running the following from the root directory of
+the source checkout.
+
+```
+yarn run start 
+```
+
+The server can be stopped by killing that process.
+
 
 # Contributing
 
