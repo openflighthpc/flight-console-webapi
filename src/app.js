@@ -99,9 +99,9 @@ apiRouter.get('/ssh/host/:host?', function (req, res, next) {
       debug('checkAuthentication failed: %o', err);
       if (err.level === 'client-authentication') {
         res
-          .status(401)
+          .status(503)
           .header('Content-Type', 'application/json')
-          .send(JSON.stringify( { errors: [ { code: 'Unauthorized' } ]}));
+          .send(JSON.stringify( { errors: [ { code: 'Missing SSH Configuration' } ]}));
       } else {
         res
           .status(500)
