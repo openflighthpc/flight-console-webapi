@@ -16,6 +16,7 @@ const defaultConfig = {
   ssh: {
     host: null,
     port: 22,
+    private_key_path: path.join(configPath, '..', 'id_rsa'),
     term: 'xterm-color',
     readyTimeout: 20000,
     keepaliveInterval: 120000,

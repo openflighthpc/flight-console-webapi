@@ -23,3 +23,4 @@ yarn-debug.log*
 yarn-error.log*
 etc/config.json
 etc/shared-secret.conf
+etc/id_rsa*

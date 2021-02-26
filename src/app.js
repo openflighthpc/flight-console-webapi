@@ -39,7 +39,16 @@ if (fs.existsSync(config.sso.shared_secret_path)) {
   flightAuth = auth.flight_auth(fs.readFileSync(config.sso.shared_secret_path), config.sso.cookie_name);
   Object.freeze(flightAuth);
 } else {
-  throw "Could not locate shared secret: " + config.sso_secret_path
+  throw "Could not locate shared secret: " + config.sso.shared_secret_path
+}
+
+// Ensures the private_key exists
+var private_key
+if (fs.existsSync(config.ssh.private_key_path)) {
+  console.log("Using private key: " + config.ssh.private_key_path)
+  private_key = fs.readFileSync(config.ssh.private_key_path, 'utf8')
+} else {
+  throw "Could not locate the private key: " + config.ssh.private_key_path
 }
 
 // express
@@ -70,6 +79,7 @@ apiRouter.get('/ssh/host/:host?', function (req, res, next) {
       req.params.host) || config.ssh.host,
     port: (validator.isInt(req.query.port + '', { min: 1, max: 65535 }) &&
       req.query.port) || config.ssh.port,
+    privateKey: private_key,
     localAddress: config.ssh.localAddress,
     localPort: config.ssh.localPort,
     algorithms: config.algorithms,
