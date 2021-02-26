@@ -9,6 +9,7 @@ const http = require('http');
 const logger = require('morgan');
 const socketIO = require('socket.io');
 const validator = require('validator');
+const fs = require('fs');
 
 const cookieParser = require('cookie-parser');
 const auth = require('./auth')
@@ -31,6 +32,16 @@ const session = require('express-session')({
 const app = express()
 const server = http.Server(app);
 
+// Creates the authentication object
+var flightAuth
+if (fs.existsSync(config.sso.shared_secret_path)) {
+  console.log("Loading shared secret: " + config.sso.shared_secret_path);
+  flightAuth = auth.flight_auth(fs.readFileSync(config.sso.shared_secret_path), config.sso.cookie_name);
+  Object.freeze(flightAuth);
+} else {
+  throw "Could not locate shared secret: " + config.sso_secret_path
+}
+
 // express
 app.use(cors({
   origin: true,
@@ -39,7 +50,7 @@ app.use(cors({
 app.use(safeShutdownGuard);
 app.use(session);
 app.use(cookieParser());
-app.use(auth.flight_auth(config.sso.shared_secret, config.sso.cookie_name));
+app.use(flightAuth);
 if (config.accesslog) { app.use(logger('common')); }
 app.disable('x-powered-by');
 

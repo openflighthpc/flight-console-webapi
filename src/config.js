@@ -29,7 +29,7 @@ const defaultConfig = {
   },
   sso: {
     cookie_name: 'flight_login',
-    shared_secret: 'foob-bar'
+    shared_secret_path: path.join(configPath, '..', 'shared-secret.conf')
   },
   session: {
     name: 'WebSSH2',
