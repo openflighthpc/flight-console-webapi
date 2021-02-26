@@ -4,11 +4,6 @@
     "port": 2222
   },
   "pidfile": "/tmp/console-api.pid",
-  "user": {
-    "name": null,
-    "password": null,
-    "privatekey": null
-  },
   "ssh": {
     "host": null,
     "port": 22,

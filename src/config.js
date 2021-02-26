@@ -13,11 +13,6 @@ const defaultConfig = {
     port: 2222
   },
   pidfile: null,
-  user: {
-    name: null,
-    password: null,
-    privatekey: null
-  },
   ssh: {
     host: null,
     port: 22,
