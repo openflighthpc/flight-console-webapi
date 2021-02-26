@@ -5,35 +5,59 @@
 // private
 require('colors') // allow for color property extensions in log messages
 const debug = require('debug')('flight:console')
-const Auth = require('basic-auth')
+const jwt = require('jsonwebtoken')
 
-const defaultCredentials = { username: null, password: null, privatekey: null }
+exports.flight_auth = function(shared_secret, sso_cookie_name) {
+  return function (req, res, next) {
+    var decoded;
+    var token = '';
+    var cookie = req.cookies[sso_cookie_name];
+    var authHeader = req.headers.authorization
+    var credentials = {};
+    if (cookie) {
+      token = cookie;
+    } else if (authHeader && authHeader.startsWith("Bearer ")) {
+      token = authHeader.substring(7, authHeader.length);
+    }
 
-exports.setDefaultCredentials = function (username, password, privatekey) {
-  defaultCredentials.username = username
-  defaultCredentials.password = password
-  defaultCredentials.privatekey = privatekey
-}
+    try {
+      decoded = jwt.verify(token, shared_secret);
+      if (decoded.username) {
+        credentials.username = decoded.username;
+        credentials.invalid = false;
+        credentials.forbidden = false;
+      } else {
+        debug("Credentials do not include an username");
+        credentials.invalid = true;
+        credentials.forbidden = true;
+      }
+    } catch(err) {
+      debug("Could not verify credentials: " + err.message)
+      if (err.message == 'invalid signature') {
+        credentials.forbidden = true
+        credentials.invalid = true
+      } else {
+        credentials.forbidden = false
+        credentials.invalid = true
+      }
+    }
+    debug("Credentials: " + JSON.stringify(credentials))
 
-exports.basicAuth = function basicAuth (req, res, next) {
-  const myAuth = Auth(req)
-  if (myAuth && myAuth.pass !== '') {
-    req.session.username = myAuth.name
-    req.session.userpassword = myAuth.pass
-    debug('auth: name: ' + myAuth.name.yellow.bold.underline +
-      ' and password ' + ((myAuth.pass) ? 'exists'.yellow.bold.underline
-      : 'is blank'.underline.red.bold))
-  } else {
-    req.session.username = defaultCredentials.username
-    req.session.userpassword = defaultCredentials.password
-    req.session.privatekey = defaultCredentials.privatekey
+    if (credentials.forbidden) {
+      res.statusCode = 403
+      debug("forbidden request (403)");
+      res.end("You do not have permission to access this resource!")
+      return
+    } else if (credentials.invalid) {
+      res.statusCode = 401
+      debug("invalid credentials (401)")
+      res.end("Could not verify your authentication credentials. Please check them an try again.")
+      return
+    } else {
+      req.session.username = credentials.username
+      req.session.userpassword = 'foobar'
+    }
+
+    next()
   }
-  if ((!req.session.userpassword) && (!req.session.privatekey)) {
-    res.statusCode = 401
-    debug('basicAuth credential request (401)')
-    res.setHeader('WWW-Authenticate', 'Basic realm="WebSSH"')
-    res.end('Username and password required for web SSH service.')
-    return
-  }
-  next()
 }

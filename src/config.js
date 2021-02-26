@@ -27,6 +27,10 @@ const defaultConfig = {
     keepaliveCountMax: 10,
     allowedSubnets: []
   },
+  sso: {
+    cookie_name: 'flight_login',
+    shared_secret: 'foob-bar'
+  },
   session: {
     name: 'WebSSH2',
     secret: 'mysecret'

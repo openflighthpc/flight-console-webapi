@@ -10,6 +10,7 @@ const logger = require('morgan');
 const socketIO = require('socket.io');
 const validator = require('validator');
 
+const cookieParser = require('cookie-parser');
 const auth = require('./auth')
 const checkAuthentication = require('./sshUtils').checkAuthentication;
 const config = require('./config').config;
@@ -29,7 +30,6 @@ const session = require('express-session')({
 
 const app = express()
 const server = http.Server(app);
-auth.setDefaultCredentials(config.user.name, config.user.password, config.user.privatekey)
 
 // express
 app.use(cors({
@@ -38,7 +38,8 @@ app.use(cors({
 }));
 app.use(safeShutdownGuard);
 app.use(session);
-app.use(auth.basicAuth);
+app.use(cookieParser());
+app.use(auth.flight_auth(config.sso.shared_secret, config.sso.cookie_name));
 if (config.accesslog) { app.use(logger('common')); }
 app.disable('x-powered-by');
 
