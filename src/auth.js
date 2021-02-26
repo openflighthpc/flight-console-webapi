@@ -51,7 +51,7 @@ exports.flight_auth = function(shared_secret, sso_cookie_name) {
     } else if (credentials.invalid) {
       res.statusCode = 401
       debug("invalid credentials (401)")
-      res.end("Could not verify your authentication credentials. Please check them an try again.")
+      res.end("Could not verify your authentication credentials. Please check them and try again.")
       return
     } else {
       req.session.username = credentials.username
