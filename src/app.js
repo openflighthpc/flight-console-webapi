@@ -99,7 +99,7 @@ apiRouter.get('/ssh/host/:host?', function (req, res, next) {
       debug('checkAuthentication failed: %o', err);
       if (err.level === 'client-authentication') {
         res
-          .status(503)
+          .status(422)
           .header('Content-Type', 'application/json')
           .send(JSON.stringify( { errors: [ { code: 'Missing SSH Configuration' } ]}));
       } else {
