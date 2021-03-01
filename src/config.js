@@ -17,6 +17,7 @@ const defaultConfig = {
     host: null,
     port: 22,
     private_key_path: path.join(configPath, '..', 'id_rsa'),
+    public_key_path: path.join(configPath, '..', 'id_rsa.pub'),
     term: 'xterm-color',
     readyTimeout: 20000,
     keepaliveInterval: 120000,
