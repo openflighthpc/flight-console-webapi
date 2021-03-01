@@ -12,6 +12,7 @@ const defaultConfig = {
     ip: '0.0.0.0',
     port: 2222
   },
+  ruby: '/opt/flight/bin/ruby',
   pidfile: null,
   ssh: {
     host: null,

@@ -11,6 +11,7 @@ const socketIO = require('socket.io');
 const validator = require('validator');
 const fs = require('fs');
 const path = require('path');
+const { spawnSync } = require('child_process');
 
 const cookieParser = require('cookie-parser');
 const auth = require('./auth')
@@ -128,69 +129,69 @@ apiRouter.get('/ssh/host/:host?', function (req, res, next) {
 // NOTE: The service is pre-configured with the public key
 // It does not accept a key from the user by design
 apiRouter.put('/ssh/authorized_key', function(req, res, next) {
-  fs.readFile('/etc/passwd', 'utf8', function(err, passwd) {
+  var args = ['-e', `require 'json'; require 'etc'; puts Etc.getpwnam('${req.session.username}').to_h.to_json`]
+  var child = spawnSync(config.ruby, args, { 'env': {}, 'shell': false, 'serialization': 'json' })
+  if (! child.status == 0) {
+    debug("Could not determine the users home directory");
+    debug(child.stderr.toString('utf8'));
+    res.statusCode = 500;
+    res.end("Failed to locate your authorized_keys");
+    return
+  }
+
+  // Determine the user's authorized_keys file
+  var stdout = JSON.parse(child.stdout.toString('utf8'));
+  debug(stdout);
+  var keys_path = path.join(stdout.dir, '.ssh', 'authorized_keys');
+  var uid = stdout.uid;
+  var guid = stdout.guid;
+  debug("Determined the user's home/uid/guid")
+
+  // Ensure the keys file exists
+  if (! fs.existsSync(keys_path)) {
+    fs.closeSync(fs.openSync(keys_path, 'w'));
+    fs.chownSync(keys_path, uid, guid);
+  }
+
+  // Applies they key to the file
+  fs.readFile(keys_path, 'utf8', function(err, keys) {
     if (err) {
-      debug("Could not load: /etc/passwd");
+      debug("Could not read: " + keys_path);
       debug(err)
       res.statusCode = 500;
-      res.end("Failed to locate your authorized_keys");
+      res.end("Failed to read your authorized_keys");
       return
     }
 
-    // Determine the user's authorized_keys file
-    var entry = passwd.split("\n")
-                      .map(v => v.split(':'))
-                      .find( v => v[0] == req.session.username);
-    var keys_path = path.join(entry.slice(-2)[0], '.ssh', 'authorized_keys');
-    var uid = parseInt(entry[2]);
-    var guid = parseInt(entry[3]);
-
-    // Ensure the keys file exists
-    if (! fs.existsSync(keys_path)) {
-      fs.closeSync(fs.openSync(keys_path, 'w'));
-      fs.chownSync(keys_path, uid, guid);
-    }
-
-    // Applies they key to the file
-    fs.readFile(keys_path, 'utf8', function(err, keys) {
-      if (err) {
-        debug("Could not read: " + keys_path);
-        debug(err)
-        res.statusCode = 500;
-        res.end("Failed to read your authorized_keys");
-        return
+    if (keys.includes(public_key)) {
+      res.statusCode = 200;
+      res.end("Your authorized_keys have not been changed");
+      return
+    } else {
+      // Appends the public_key to the existing keys ensure it nicely padded with newlines
+      if (keys.slice(-1)[0] != "\n") {
+        keys = keys.concat("\n");
+      }
+      keys = keys.concat(public_key)
+      if (keys.slice(-1)[0] != "\n") {
+        keys = keys.concat("\n");
       }
 
-      if (keys.includes(public_key)) {
-        res.statusCode = 200;
-        res.end("Your authorized_keys have not been changed");
-        return
-      } else {
-        // Appends the public_key to the existing keys ensure it nicely padded with newlines
-        if (keys.slice(-1)[0] != "\n") {
-          keys = keys.concat("\n");
-        }
-        keys = keys.concat(public_key)
-        if (keys.slice(-1)[0] != "\n") {
-          keys = keys.concat("\n");
-        }
-
-        // Write the updated keys file
-        fs.writeFile(keys_path, keys, function(err) {
-          if (err) {
-            debug("Could not write: " + keys_path);
-            debug(err);
-            res.statusCode = 500;
-            res.end("Failed to update your authorized_keys");
-            return
-          }
-
-          res.statusCode = 200;
-          res.end("Updated your authorized_keys");
+      // Write the updated keys file
+      fs.writeFile(keys_path, keys, function(err) {
+        if (err) {
+          debug("Could not write: " + keys_path);
+          debug(err);
+          res.statusCode = 500;
+          res.end("Failed to update your authorized_keys");
           return
-        });
-      }
-    });
+        }
+
+        res.statusCode = 200;
+        res.end("Updated your authorized_keys");
+        return
+      });
+    }
   });
 });
 
