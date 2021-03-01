@@ -12,6 +12,7 @@ const validator = require('validator');
 const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
+const async = require('async');
 
 const cookieParser = require('cookie-parser');
 const auth = require('./auth')
@@ -144,55 +145,59 @@ apiRouter.put('/ssh/authorized_key', function(req, res, next) {
   debug(stdout);
   var keys_path = path.join(stdout.dir, '.ssh', 'authorized_keys');
   var uid = stdout.uid;
-  var guid = stdout.guid;
+  var gid = stdout.gid;
   debug("Determined the user's home/uid/guid")
 
-  // Ensure the keys file exists
-  if (! fs.existsSync(keys_path)) {
-    fs.closeSync(fs.openSync(keys_path, 'w'));
-    fs.chownSync(keys_path, uid, guid);
-  }
-
   // Applies they key to the file
-  fs.readFile(keys_path, 'utf8', function(err, keys) {
-    if (err) {
-      debug("Could not read: " + keys_path);
-      debug(err)
-      res.statusCode = 500;
-      res.end("Failed to read your authorized_keys");
-      return
-    }
+  res.statusCode = 500; // Default to an error has occurred
+  async.waterfall(
+    [
+      // Reads the keys file
+      function(c) {
+        fs.readFile(keys_path, 'utf8', function(err, keys) {
+          if (err && err.code === 'ENOENT') {
+            fs.closeSync(fs.openSync(keys_path, 'w'));
+            fs.chownSync(keys_path, uid, gid);
+            c(null, '');
+          } else if (err) {
+            debug("Could not read: " + keys_path);
+            debug(err);
+            c("Failed to read your authorized_keys", null);
+          } else if (keys.includes(public_key)) {
+            res.statusCode = 200;
+            c("Your authorized_keys have not been changed");
+          } else {
+            c(null, keys);
+          }
+        })
+      },
 
-    if (keys.includes(public_key)) {
-      res.statusCode = 200;
-      res.end("Your authorized_keys have not been changed");
-      return
-    } else {
-      // Appends the public_key to the existing keys ensure it nicely padded with newlines
-      if (keys.slice(-1)[0] != "\n") {
-        keys = keys.concat("\n");
-      }
-      keys = keys.concat(public_key)
-      if (keys.slice(-1)[0] != "\n") {
-        keys = keys.concat("\n");
-      }
-
-      // Write the updated keys file
-      fs.writeFile(keys_path, keys, function(err) {
-        if (err) {
-          debug("Could not write: " + keys_path);
-          debug(err);
-          res.statusCode = 500;
-          res.end("Failed to update your authorized_keys");
-          return
+      // Updates the keys file
+      function(keys, c) {
+        // Appends the public_key to the existing keys ensure it nicely padded with newlines
+        if (keys.slice(-1)[0] != "\n") {
+          keys = keys.concat("\n");
         }
-
-        res.statusCode = 200;
-        res.end("Updated your authorized_keys");
-        return
-      });
+        keys = keys.concat(public_key)
+        if (keys.slice(-1)[0] != "\n") {
+          keys = keys.concat("\n");
+        }
+        fs.writeFile(keys_path, keys, function(err) {
+          if (err) {
+            debug("Could not write: " + keys_path);
+            debug(err);
+            res.end("Failed to update your authorized_keys");
+          } else {
+            res.statusCode = 200
+            c("Updated your authorized_keys", true)
+          }
+        })
+      }
+    ],
+    function(msg, _) {
+      res.end(msg);
     }
-  });
+  )
 });
 
 app.use('/', apiRouter);
