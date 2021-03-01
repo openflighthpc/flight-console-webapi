@@ -142,6 +142,14 @@ apiRouter.put('/ssh/authorized_key', function(req, res, next) {
                       .map(v => v.split(':'))
                       .find( v => v[0] == req.session.username);
     var keys_path = path.join(entry.slice(-2)[0], '.ssh', 'authorized_keys');
+    var uid = parseInt(entry[2]);
+    var guid = parseInt(entry[3]);
+
+    // Ensure the keys file exists
+    if (! fs.existsSync(keys_path)) {
+      fs.closeSync(fs.openSync(keys_path, 'w'));
+      fs.chownSync(keys_path, uid, guid);
+    }
 
     // Applies they key to the file
     fs.readFile(keys_path, 'utf8', function(err, keys) {
