@@ -1,12 +1,15 @@
 {
   "listen": {
     "ip": "0.0.0.0",
-    "port": 2222
+    "port": 6312
   },
+  "ruby": "/opt/flight/bin/ruby",
   "pidfile": "/tmp/console-api.pid",
   "ssh": {
     "host": null,
     "port": 22,
+    "private_key_path": "./etc/id_rsa",
+    "public_key_path": "./etc/id_rsa.pub",
     "localAddress": null,
     "localPort": null,
     "term": "xterm-color",
@@ -14,6 +17,10 @@
     "keepaliveInterval": 120000,
     "keepaliveCountMax": 10,
     "allowedSubnets": []
+  },
+  "sso": {
+    "cookie_name": "flight_login",
+    "shared_secret_path": "./etc/shared-secret.conf"
   },
   "session": {
     "name": "WebSSH2",

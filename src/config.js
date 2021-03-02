@@ -10,7 +10,7 @@ const configPath = path.join(nodeRoot, '..', 'etc', 'config.json')
 const defaultConfig = {
   listen: {
     ip: '0.0.0.0',
-    port: 2222
+    port: 6312
   },
   ruby: '/opt/flight/bin/ruby',
   pidfile: null,
