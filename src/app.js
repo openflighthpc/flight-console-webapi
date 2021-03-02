@@ -132,9 +132,11 @@ apiRouter.get('/ssh/host/:host?', function (req, res, next) {
 apiRouter.put('/ssh/authorized_key', function(req, res, next) {
   var args = ['-e', `require 'json'; require 'etc'; puts Etc.getpwnam('${req.session.username}').to_h.to_json`]
   var child = spawnSync(config.ruby, args, { 'env': {}, 'shell': false, 'serialization': 'json' })
-  if (! child.status == 0) {
+  if (child.error || child.status !== 0) {
     debug("Could not determine the users home directory");
-    debug(child.stderr.toString('utf8'));
+    debug(
+      child.error ? child.error.toString() : child.stderr.toString('utf8')
+    );
     res.statusCode = 500;
     res.end("Failed to locate your authorized_keys");
     return
