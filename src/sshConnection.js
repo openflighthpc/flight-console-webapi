@@ -143,7 +143,7 @@ module.exports = function socket (socket) {
     finish([socket.request.session.userpassword])
   });
 
-  if (session.username && (session.userpassword || session.privatekey) && sshConfig) {
+  if (session.username && sshConfig) {
     conn.connect(sshUtils.connectionOptions(session));
   } else {
     debug('Attempt to connect without session.username/password or session ' +

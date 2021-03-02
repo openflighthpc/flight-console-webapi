@@ -9,7 +9,12 @@ const http = require('http');
 const logger = require('morgan');
 const socketIO = require('socket.io');
 const validator = require('validator');
+const fs = require('fs');
+const path = require('path');
+const { spawnSync } = require('child_process');
+const async = require('async');
 
+const cookieParser = require('cookie-parser');
 const auth = require('./auth')
 const checkAuthentication = require('./sshUtils').checkAuthentication;
 const config = require('./config').config;
@@ -29,7 +34,36 @@ const session = require('express-session')({
 
 const app = express()
 const server = http.Server(app);
-auth.setDefaultCredentials(config.user.name, config.user.password, config.user.privatekey)
+
+// Creates the authentication object
+var flightAuth
+if (fs.existsSync(config.sso.shared_secret_path)) {
+  console.log("Loading shared secret: " + config.sso.shared_secret_path);
+  flightAuth = auth.flight_auth(fs.readFileSync(config.sso.shared_secret_path), config.sso.cookie_name);
+  Object.freeze(flightAuth);
+} else {
+  throw "Could not locate shared secret: " + config.sso.shared_secret_path
+}
+
+// Ensures the private_key exists
+var private_key
+if (fs.existsSync(config.ssh.private_key_path)) {
+  console.log("Using private key: " + config.ssh.private_key_path)
+  private_key = fs.readFileSync(config.ssh.private_key_path, 'utf8')
+  Object.freeze(private_key)
+} else {
+  throw "Could not locate the private key: " + config.ssh.private_key_path
+}
+
+// Ensures the public_key exists
+var public_key
+if (fs.existsSync(config.ssh.public_key_path)) {
+  console.log("Using public key: " + config.ssh.public_key_path)
+  public_key = fs.readFileSync(config.ssh.public_key_path, 'utf8')
+  Object.freeze(public_key)
+} else {
+  throw "Could not locate the public key: " + config.ssh.public_key_path
+}
 
 // express
 app.use(cors({
@@ -38,7 +72,8 @@ app.use(cors({
 }));
 app.use(safeShutdownGuard);
 app.use(session);
-app.use(auth.basicAuth);
+app.use(cookieParser());
+app.use(flightAuth);
 if (config.accesslog) { app.use(logger('common')); }
 app.disable('x-powered-by');
 
@@ -58,6 +93,7 @@ apiRouter.get('/ssh/host/:host?', function (req, res, next) {
       req.params.host) || config.ssh.host,
     port: (validator.isInt(req.query.port + '', { min: 1, max: 65535 }) &&
       req.query.port) || config.ssh.port,
+    privateKey: private_key,
     localAddress: config.ssh.localAddress,
     localPort: config.ssh.localPort,
     algorithms: config.algorithms,
@@ -77,9 +113,9 @@ apiRouter.get('/ssh/host/:host?', function (req, res, next) {
       debug('checkAuthentication failed: %o', err);
       if (err.level === 'client-authentication') {
         res
-          .status(401)
+          .status(422)
           .header('Content-Type', 'application/json')
-          .send(JSON.stringify( { errors: [ { code: 'Unauthorized' } ]}));
+          .send(JSON.stringify( { errors: [ { code: 'Missing SSH Configuration' } ]}));
       } else {
         res
           .status(500)
@@ -89,6 +125,82 @@ apiRouter.get('/ssh/host/:host?', function (req, res, next) {
     });
 
 })
+
+// Adds the public key to the users authorized_keys file
+// NOTE: The service is pre-configured with the public key
+// It does not accept a key from the user by design
+apiRouter.put('/ssh/authorized_key', function(req, res, next) {
+  var args = ['-e', `require 'json'; require 'etc'; puts Etc.getpwnam('${req.session.username}').to_h.to_json`]
+  var child = spawnSync(config.ruby, args, { 'env': {}, 'shell': false, 'serialization': 'json' })
+  if (child.error || child.status !== 0) {
+    debug("Could not determine the users home directory");
+    debug(
+      child.error ? child.error.toString() : child.stderr.toString('utf8')
+    );
+    res.statusCode = 500;
+    res.end("Failed to locate your authorized_keys");
+    return
+  }
+
+  // Determine the user's authorized_keys file
+  var stdout = JSON.parse(child.stdout.toString('utf8'));
+  debug(stdout);
+  var keys_path = path.join(stdout.dir, '.ssh', 'authorized_keys');
+  var uid = stdout.uid;
+  var gid = stdout.gid;
+  debug("Determined the user's home/uid/guid")
+
+  // Applies they key to the file
+  res.statusCode = 500; // Default to an error has occurred
+  async.waterfall(
+    [
+      // Reads the keys file
+      function(c) {
+        fs.readFile(keys_path, 'utf8', function(err, keys) {
+          if (err && err.code === 'ENOENT') {
+            fs.closeSync(fs.openSync(keys_path, 'w'));
+            fs.chownSync(keys_path, uid, gid);
+            c(null, '');
+          } else if (err) {
+            debug("Could not read: " + keys_path);
+            debug(err);
+            c("Failed to read your authorized_keys", null);
+          } else if (keys.includes(public_key)) {
+            res.statusCode = 200;
+            c("Your authorized_keys have not been changed");
+          } else {
+            c(null, keys);
+          }
+        })
+      },
+
+      // Updates the keys file
+      function(keys, c) {
+        // Appends the public_key to the existing keys ensure it nicely padded with newlines
+        if (keys.slice(-1)[0] != "\n") {
+          keys = keys.concat("\n");
+        }
+        keys = keys.concat(public_key)
+        if (keys.slice(-1)[0] != "\n") {
+          keys = keys.concat("\n");
+        }
+        fs.writeFile(keys_path, keys, function(err) {
+          if (err) {
+            debug("Could not write: " + keys_path);
+            debug(err);
+            res.end("Failed to update your authorized_keys");
+          } else {
+            res.statusCode = 200
+            c("Updated your authorized_keys", true)
+          }
+        })
+      }
+    ],
+    function(msg, _) {
+      res.end(msg);
+    }
+  )
+});
 
 app.use('/', apiRouter);
 

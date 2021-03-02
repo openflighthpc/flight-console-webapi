@@ -10,22 +10,24 @@ const configPath = path.join(nodeRoot, '..', 'etc', 'config.json')
 const defaultConfig = {
   listen: {
     ip: '0.0.0.0',
-    port: 2222
+    port: 6312
   },
+  ruby: '/opt/flight/bin/ruby',
   pidfile: null,
-  user: {
-    name: null,
-    password: null,
-    privatekey: null
-  },
   ssh: {
     host: null,
     port: 22,
+    private_key_path: path.join(configPath, '..', 'id_rsa'),
+    public_key_path: path.join(configPath, '..', 'id_rsa.pub'),
     term: 'xterm-color',
     readyTimeout: 20000,
     keepaliveInterval: 120000,
     keepaliveCountMax: 10,
     allowedSubnets: []
+  },
+  sso: {
+    cookie_name: 'flight_login',
+    shared_secret_path: path.join(configPath, '..', 'shared-secret.conf')
   },
   session: {
     name: 'WebSSH2',
