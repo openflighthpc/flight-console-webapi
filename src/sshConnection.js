@@ -83,27 +83,32 @@ module.exports = function socket (socket) {
 
       // Determine if the requested directory exists using SFTP
       function(_, waterfall) {
-        var dir = '/tmp';
-        conn.sftp(function(err, sftp) {
-          if (err) {
-            SSHError('EXEC ERROR' + err);
-            waterfall(true, null);
-          } else {
-            sftp.opendir(dir, function(err, _buffer) {
-              // Assumable the directory does not exist
-              // TODO: Check permissions issues?
-              if (err) {
-                debug("Requested directory: " + dir);
-                debug(err);
-                waterfall(null, null);
+        if (sshConfig.dir) {
+          conn.sftp(function(err, sftp) {
+            if (err) {
+              SSHError('EXEC ERROR' + err);
+              waterfall(true, null);
+            } else {
+              sftp.opendir(sshConfig.dir, function(err, _buffer) {
+                // Assumable the directory does not exist
+                // TODO: Check permissions issues?
+                if (err) {
+                  debug("Requested directory: " + sshConfig.dir);
+                  debug(err);
+                  waterfall(null, null);
 
-              // The directory does exist
-              } else {
-                waterfall(null, dir);
-              }
-            })
-          }
-        });
+                // The directory does exist
+                } else {
+                  waterfall(null, sshConfig.dir);
+                }
+              })
+            }
+          });
+
+        // Skip SFTP if the directory isn't given
+        } else {
+          waterfall(null, null);
+        }
       },
 
       // Establish the SSH connection in a PTY
