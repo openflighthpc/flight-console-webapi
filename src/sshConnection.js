@@ -2,6 +2,7 @@
 'use strict'
 /* jshint esversion: 6, asi: true, node: true */
 
+const async = require('async');
 const debug = require('debug')('flight:console')
 const SSH = require('ssh2').Client
 const CIDRMatcher = require('cidr-matcher')
@@ -60,76 +61,87 @@ module.exports = function socket (socket) {
     socket.emit('data', data.toString('utf-8'));
   })
 
-  conn.on('ready', function connOnReady () {
-    console.log(
-      'Flight console Login:' +
-      ' user=' + session.username +
-      ' from=' + socket.handshake.address +
-      ' host=' + sshConfig.host +
-      ' port=' + sshConfig.port +
-      ' sessionID=' + socket.request.sessionID + '/' + socket.id +
-      ' mrhsession=' + sshConfig.mrhsession +
-      ' term=' + sshConfig.term
-    );
-    socket.emit('status', 'SSH CONNECTION ESTABLISHED');
-    conn.shell({
-      term: sshConfig.term,
-      cols: termCols,
-      rows: termRows
-    }, function connShell (err, stream) {
-      if (err) {
-        SSHerror('EXEC ERROR' + err)
-        conn.end()
-        return
+  async.waterfall([
+      // Wait until the connection is ready
+      function(waterfall) {
+        conn.on('ready', function connOnReady() {
+          console.log(
+            'Flight console Login:' +
+            ' user=' + session.username +
+            ' from=' + socket.handshake.address +
+            ' host=' + sshConfig.host +
+            ' port=' + sshConfig.port +
+            ' sessionID=' + socket.request.sessionID + '/' + socket.id +
+            ' mrhsession=' + sshConfig.mrhsession +
+            ' term=' + sshConfig.term
+          );
+          socket.emit('status', 'SSH CONNECTION ESTABLISHED');
+
+          waterfall(null, null);
+        })
+      },
+
+      // Establish the SSH connection in a PTY
+      function(_, waterfall) {
+        conn.shell({
+          term: sshConfig.term,
+          cols: termCols,
+          rows: termRows
+        }, function connShell (err, stream) {
+          if (err) {
+            SSHerror('EXEC ERROR' + err)
+            conn.end();
+            waterfall(true, null);
+          }
+
+          // Move to the given directory
+          stream.write("cd /tmp #--flight-console-hidden--\n");
+
+          socket.on('data', function socketOnData (data) {
+            stream.write(data)
+          })
+
+          socket.on('resize', function socketOnResize (data) {
+            stream.setWindow(data.rows, data.cols)
+          })
+
+          socket.on('disconnecting', function socketOnDisconnecting (reason) {
+            debug('SOCKET DISCONNECTING: ' + reason)
+          })
+
+          socket.on('disconnect', function socketOnDisconnect (reason) {
+            debug('SOCKET DISCONNECT: ' + reason)
+            err = { message: reason }
+            SSHerror('CLIENT SOCKET DISCONNECT', err)
+            conn.end()
+            // socket.request.session.destroy()
+          })
+
+          socket.on('error', function socketOnError (err) {
+            SSHerror('SOCKET ERROR', err)
+            conn.end()
+          })
+
+          stream.on('data', function streamOnData (data) {
+            // Remove lines which trail with the hidden comment
+            // This allows commands to be ran in the "background" without notifying the user
+            socket.emit('data', data.toString('utf-8').replace(/^.*#--flight-console-hidden--\r?\n/g, ''))
+          })
+
+          stream.on('close', function streamOnClose (code, signal) {
+            let messages = [];
+            if (code)   { messages.push(`CODE: ${code}`); }
+            if (signal) { messages.push(`SIGNAL: ${signal}`); }
+            SSHerror('STREAM CLOSE', { message: messages.join(' ') })
+            waterfall(true, null);
+          })
+        })
       }
+    ],
 
-      // Move to the given directory
-      stream.write("cd /tmp #--flight-console-hidden--\n");
-
-      socket.on('data', function socketOnData (data) {
-        stream.write(data)
-      })
-
-      socket.on('resize', function socketOnResize (data) {
-        stream.setWindow(data.rows, data.cols)
-      })
-
-      socket.on('disconnecting', function socketOnDisconnecting (reason) {
-        debug('SOCKET DISCONNECTING: ' + reason)
-      })
-
-      socket.on('disconnect', function socketOnDisconnect (reason) {
-        debug('SOCKET DISCONNECT: ' + reason)
-        err = { message: reason }
-        SSHerror('CLIENT SOCKET DISCONNECT', err)
-        conn.end()
-        // socket.request.session.destroy()
-      })
-
-      socket.on('error', function socketOnError (err) {
-        SSHerror('SOCKET ERROR', err)
-        conn.end()
-      })
-
-      stream.on('data', function streamOnData (data) {
-        // Remove lines which trail with the hidden comment
-        // This allows commands to be ran in the "background" without notifying the user
-        socket.emit('data', data.toString('utf-8').replace(/^.*#--flight-console-hidden--\r?\n/g, ''))
-      })
-
-      stream.on('close', function streamOnClose (code, signal) {
-        let messages = [];
-        if (code)   { messages.push(`CODE: ${code}`); }
-        if (signal) { messages.push(`SIGNAL: ${signal}`); }
-        SSHerror('STREAM CLOSE', { message: messages.join(' ') })
-        conn.end()
-      })
-
-      stream.stderr.on('data', function streamStderrOnData (data) {
-        console.log('STDERR: ' + data)
-      })
-    })
-  })
+    // Close the connection
+    function(_, _a) { conn.end(); }
+  )
 
   conn.on('end', function connOnEnd (err) {
     SSHerror('CONN END BY HOST', err);
