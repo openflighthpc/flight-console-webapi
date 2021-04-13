@@ -95,7 +95,7 @@ module.exports = function socket (socket) {
           }
 
           // Move to the given directory
-          stream.write("cd /tmp #--flight-console-hidden--\n");
+          stream.write("cd /tmp\n");
 
           socket.on('data', function socketOnData (data) {
             stream.write(data)
@@ -123,9 +123,7 @@ module.exports = function socket (socket) {
           })
 
           stream.on('data', function streamOnData (data) {
-            // Remove lines which trail with the hidden comment
-            // This allows commands to be ran in the "background" without notifying the user
-            socket.emit('data', data.toString('utf-8').replace(/^.*#--flight-console-hidden--\r?\n/g, ''))
+            socket.emit('data', data.toString('utf-8'));
           })
 
           stream.on('close', function streamOnClose (code, signal) {
