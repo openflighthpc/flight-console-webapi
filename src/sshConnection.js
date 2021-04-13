@@ -81,8 +81,33 @@ module.exports = function socket (socket) {
         })
       },
 
-      // Establish the SSH connection in a PTY
+      // Determine if the requested directory exists using SFTP
       function(_, waterfall) {
+        var dir = '/tmp';
+        conn.sftp(function(err, sftp) {
+          if (err) {
+            SSHError('EXEC ERROR' + err);
+            waterfall(true, null);
+          } else {
+            sftp.opendir(dir, function(err, _buffer) {
+              // Assumable the directory does not exist
+              // TODO: Check permissions issues?
+              if (err) {
+                debug("Requested directory: " + dir);
+                debug(err);
+                waterfall(null, null);
+
+              // The directory does exist
+              } else {
+                waterfall(null, dir);
+              }
+            })
+          }
+        });
+      },
+
+      // Establish the SSH connection in a PTY
+      function(working_dir, waterfall) {
         conn.shell({
           term: sshConfig.term,
           cols: termCols,
@@ -94,8 +119,10 @@ module.exports = function socket (socket) {
             waterfall(true, null);
           }
 
-          // Move to the given directory
-          stream.write("cd /tmp\n");
+          // Move to the given directory (if given)
+          if (working_dir) {
+            stream.write(`cd ${working_dir}\n`);
+          }
 
           socket.on('data', function socketOnData (data) {
             stream.write(data)
