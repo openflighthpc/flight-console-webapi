@@ -73,6 +73,7 @@ module.exports = function socket (socket) {
             ' port=' + sshConfig.port +
             ' sessionID=' + socket.request.sessionID + '/' + socket.id +
             ' mrhsession=' + sshConfig.mrhsession +
+            ' dir=' + sshConfig.dir +
             ' term=' + sshConfig.term
           );
           socket.emit('status', 'SSH CONNECTION ESTABLISHED');
