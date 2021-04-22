@@ -127,7 +127,7 @@ module.exports = function socket (socket) {
 
           // Move to the given directory (if given)
           if (working_dir) {
-            stream.write(`cd ${working_dir}\n`);
+            stream.write(`cd "${working_dir}"\n`);
           }
 
           socket.on('data', function socketOnData (data) {
