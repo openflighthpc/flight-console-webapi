@@ -87,7 +87,7 @@ module.exports = function socket (socket) {
         if (sshConfig.dir) {
           conn.sftp(function(err, sftp) {
             if (err) {
-              SSHError('EXEC ERROR' + err);
+              SSHerror('EXEC ERROR' + err);
               waterfall(true, null);
             } else {
               sftp.opendir(sshConfig.dir, function(err, _buffer) {
