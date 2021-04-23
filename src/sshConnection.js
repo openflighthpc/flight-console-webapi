@@ -121,7 +121,6 @@ module.exports = function socket (socket) {
         }, function connShell (err, stream) {
           if (err) {
             SSHerror('EXEC ERROR' + err)
-            conn.end();
             waterfall(true, null);
           }
 
@@ -146,13 +145,13 @@ module.exports = function socket (socket) {
             debug('SOCKET DISCONNECT: ' + reason)
             err = { message: reason }
             SSHerror('CLIENT SOCKET DISCONNECT', err)
-            conn.end()
+            waterfall(true, null);
             // socket.request.session.destroy()
           })
 
           socket.on('error', function socketOnError (err) {
             SSHerror('SOCKET ERROR', err)
-            conn.end()
+            waterfall(true, null);
           })
 
           stream.on('data', function streamOnData (data) {
@@ -165,6 +164,10 @@ module.exports = function socket (socket) {
             if (signal) { messages.push(`SIGNAL: ${signal}`); }
             SSHerror('STREAM CLOSE', { message: messages.join(' ') })
             waterfall(true, null);
+          })
+
+          stream.stderr.on('data', function streamStderrOnData (data) {
+            console.log('STDERR: ' + data)
           })
         })
       }
