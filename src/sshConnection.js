@@ -83,12 +83,25 @@ module.exports = function socket (socket) {
       },
 
       // Determine if the requested directory exists using SFTP
+      // This prevents broken 'cd' commands being written to the terminal
+      //
+      // Currently the directory will be ignored if one of the following
+      // conditions are reached:
+      //
+      // * The directory does not exist,
+      // * There is a file permissions issue, or
+      // * SFTP failing due to the user's non-interactive shell writing to STDOUT.
+      //
+      // NOTE: Technically all SFTP errors could cause it to fail, however
+      //       it reuses the current SSH connection. So this is unlikely to cause
+      //       an issue.
       function(_, waterfall) {
         if (sshConfig.dir) {
+          debug("SFTP CHECK DIR: " + sshConfig.dir);
           conn.sftp(function(err, sftp) {
             if (err) {
-              SSHerror('EXEC ERROR' + err);
-              waterfall(true, null);
+              debug('SFTP CHECK ERROR: ' + err);
+              waterfall(null, null);
             } else {
               sftp.opendir(sshConfig.dir, function(err, _buffer) {
                 // Assumable the directory does not exist
