@@ -1,5 +1,6 @@
 'use strict'
 
+const util = require('util')
 const SSH = require('ssh2').Client;
 const debugSSH = require('debug')('ssh2');
 
@@ -8,9 +9,28 @@ function checkAuthentication(session) {
     let rejected = false;
     const conn = new SSH();
 
-    conn.on('ready', () => {
+    const close_connection = (error) => {
+      debugSSH(error);
       conn.end();
-      resolve();
+      reject(error);
+    }
+
+    conn.on('ready', () => {
+      conn.sftp((err, sftp) => {
+        if (err) {
+          close_connection(err);
+        } else {
+          sftp.realpath('.', (err, path) => {
+            if (err) {
+              close_connection(err);
+            } else {
+              session.ssh.pwd = path;
+              conn.end();
+              resolve();
+            }
+          })
+        }
+      })
     });
     conn.on('error', reject);
     const options = {

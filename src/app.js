@@ -109,7 +109,7 @@ apiRouter.get('/ssh/host/:host?', function (req, res, next) {
   }
 
   checkAuthentication(req.session)
-    .then(() => { res.status(200).send('OK') })
+    .then(() => { res.status(200).send({ pwd: req.session.ssh.pwd }) })
     .catch((err) => {
       debug('checkAuthentication failed: %o', err);
       if (err.level === 'client-authentication') {
