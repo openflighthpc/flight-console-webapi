@@ -2,7 +2,10 @@
 
 const util = require('util')
 const SSH = require('ssh2').Client;
-const debugSSH = require('debug')('ssh2');
+const debug = require('debug');
+const debugSFTP = debug('flight:console:sftp');
+const debugSSH = debug('ssh2');
+const async = require('async');
 
 function checkAuthentication(session) {
   const result = new Promise((resolve, reject) => {
@@ -16,21 +19,66 @@ function checkAuthentication(session) {
     }
 
     conn.on('ready', () => {
-      conn.sftp((err, sftp) => {
-        if (err) {
-          close_connection(err);
-        } else {
-          sftp.realpath('.', (err, path) => {
+      async.waterfall([
+        // Establish the SFTP connection
+        function(cb) {
+          debugSFTP("Starting SFTP check")
+          conn.sftp((err, sftp) => {
             if (err) {
-              close_connection(err);
+              cb(err, null);
             } else {
-              session.ssh.pwd = path;
-              conn.end();
-              resolve();
+              debugSFTP('Established SFTP client')
+              cb(null, sftp);
             }
           })
+        },
+
+        // Determine the PWD
+        function(sftp, cb) {
+          debugSFTP("Determining PWD");
+          sftp.realpath('.', (err, path) => {
+            if (err) {
+              cb(err);
+            } else {
+              session.ssh.pwd = path;
+              debug('Determined PWD: ' + path)
+              cb(null, sftp);
+            }
+          });
+        },
+
+        // Finish the SFTP checks if no dir is given
+        function(sftp, cb) {
+          if (session.ssh.dir) {
+            // TODO: Continue the dir check
+            cb(true);
+          } else {
+            debugSFTP("Skipping CWD checks")
+            cb(true);
+          }
         }
-      })
+      ],
+
+        // Final Callback, handle errors and close the connection
+        function(err) {
+          conn.end()
+          if (err && err != true) {
+            // Handle unexpected errors
+            debugSFTP("The following error occurred during SFTP checks:");
+            debugSFTP(err);
+
+            // Ensure the SFTP variables are unset
+            session.ssh.pwd = null;
+            session.ssh.cwd = null;
+
+            // Pass control back to the caller
+            reject(err);
+          } else {
+            // Pass control back to the caller
+            resolve();
+          }
+        }
+      )
     });
     conn.on('error', reject);
     const options = {

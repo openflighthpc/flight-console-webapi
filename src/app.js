@@ -112,7 +112,14 @@ apiRouter.get('/ssh/host/:host?', function (req, res, next) {
     .then(() => { res.status(200).send({ pwd: req.session.ssh.pwd }) })
     .catch((err) => {
       debug('checkAuthentication failed: %o', err);
-      if (err.level === 'client-authentication') {
+      if (err.message === 'Unexpected packet before version') {
+        res
+          .status(422)
+          .header('Content-Type', 'application/json')
+          .send(JSON.stringify( { errors: [ {
+            code: 'Unexpected SFTP STDOUT', recoverable: true
+          }]}))
+      } else if (err.level === 'client-authentication') {
         res
           .status(422)
           .header('Content-Type', 'application/json')
