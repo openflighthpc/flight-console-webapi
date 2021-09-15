@@ -47,14 +47,41 @@ function checkAuthentication(session) {
           });
         },
 
-        // Finish the SFTP checks if no dir is given
+        // Resolve the unverified_dir to an absolute path
         function(sftp, cb) {
-          if (session.ssh.dir) {
-            // TODO: Continue the dir check
-            cb(true);
+          if (session.unverified_dir) {
+            debugSFTP("Resolving: " + session.unverified_dir);
+            sftp.realpath(session.unverified_dir, (err, dir) => {
+              if (err) {
+                cb(err);
+              } else {
+                debugSFTP("Resolved: " + dir);
+                cb(null, sftp, dir);
+              }
+            });
           } else {
-            debugSFTP("Skipping CWD checks")
-            cb(true);
+            // Trigger the next callback without a dir
+            cb(null, sftp, null)
+          }
+        },
+
+        // Check if the directory exists
+        function(sftp, dir, cb) {
+          if (dir) {
+            debugSFTP("Verifying Directory: " + dir);
+            sftp.stat(dir, (err, stat) => {
+              if (err && err.message == "No such file") {
+                cb(new Error("?dir:Missing Directory"));
+              } else if (err) {
+                cb(err)
+              } else {
+                session.ssh.dir = dir
+                debugSFTP("Verified Directory: " + dir)
+                cb(null)
+              }
+            });
+          } else {
+            cb(null);
           }
         }
       ],
@@ -62,14 +89,14 @@ function checkAuthentication(session) {
         // Final Callback, handle errors and close the connection
         function(err) {
           conn.end()
-          if (err && err != true) {
+          if (err) {
             // Handle unexpected errors
             debugSFTP("The following error occurred during SFTP checks:");
             debugSFTP(err);
 
             // Ensure the SFTP variables are unset
             session.ssh.pwd = null;
-            session.ssh.cwd = null;
+            session.ssh.dir = null;
 
             // Pass control back to the caller
             reject(err);
