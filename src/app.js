@@ -113,7 +113,10 @@ apiRouter.get('/ssh/host/:host?', function (req, res, next) {
   }
 
   checkAuthentication(req.session)
-    .then(() => { res.status(200).send({ pwd: req.session.ssh.pwd }) })
+    .then(() => { res.status(200).send({
+      pwd: req.session.ssh.pwd,
+      cwd: req.session.ssh.cwd || req.session.ssh.pwd
+    }) })
     .catch((err) => {
       debug('checkAuthentication failed: %o', err);
       const dir_regex = /^\?dir:/;

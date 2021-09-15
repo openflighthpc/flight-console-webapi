@@ -84,7 +84,7 @@ function checkAuthentication(session) {
               }
             });
           } else {
-            cb(null, sftp);
+            cb(null, sftp, null);
           }
         },
 
@@ -96,7 +96,7 @@ function checkAuthentication(session) {
               if (err) {
                 cb(new Error("?dir:Permission Denied"))
               } else {
-                session.ssh.dir = dir;
+                session.ssh.cwd = dir;
                 debugSFTP("Checked Directory Permissions")
                 cb(null)
               }
@@ -117,7 +117,7 @@ function checkAuthentication(session) {
 
             // Ensure the SFTP variables are unset
             session.ssh.pwd = null;
-            session.ssh.dir = null;
+            session.ssh.cwd = null;
 
             // Pass control back to the caller
             reject(err);
