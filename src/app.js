@@ -122,13 +122,13 @@ apiRouter.get('/ssh/host/:host?', function (req, res, next) {
           .status(422)
           .header('Content-Type', 'application/json')
           .send(JSON.stringify( { errors: [ {
-            code: 'Unexpected SFTP STDOUT', type: 'SFTP'
+            code: 'Unexpected SFTP STDOUT', type: 'SFTP', basic: true
           }]}))
       } else if (err.message.match(dir_regex)) {
         res.status(422)
            .header('Content-Type', 'application/json')
            .send(JSON.stringify({ errors: [{
-             code: err.message.substring(5), type: 'dir'
+             code: err.message.substring(5), type: 'dir', basic: true
            }]}));
       } else if (err.level === 'client-authentication') {
         res

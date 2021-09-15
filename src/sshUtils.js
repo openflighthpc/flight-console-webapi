@@ -79,7 +79,7 @@ function checkAuthentication(session) {
                 debugSFTP("Directory Exists: " + dir)
                 cb(null, sftp, dir)
               } else {
-                debugSFTP("Path is not a directory!")
+                debugSFTP("Path is not a directory! " + stat.permissions.toString(8))
                 cb(new Error("?dir:Not A Directory"))
               }
             });
@@ -90,7 +90,20 @@ function checkAuthentication(session) {
 
         // Check the user can open the directory
         function(sftp, dir, cb) {
-          cb(null)
+          if (dir) {
+            debugSFTP("Checking Directory Permissions: " + dir);
+            sftp.opendir(dir, (err, _) => {
+              if (err) {
+                cb(new Error("?dir:Permission Denied"))
+              } else {
+                session.ssh.dir = dir;
+                debugSFTP("Checked Directory Permissions")
+                cb(null)
+              }
+            });
+          } else {
+            cb(null)
+          }
         }
       ],
 
