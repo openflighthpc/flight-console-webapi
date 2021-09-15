@@ -68,21 +68,29 @@ function checkAuthentication(session) {
         // Check if the directory exists
         function(sftp, dir, cb) {
           if (dir) {
-            debugSFTP("Verifying Directory: " + dir);
+            debugSFTP("Checking Directory Exists: " + dir);
             sftp.stat(dir, (err, stat) => {
               if (err && err.message == "No such file") {
                 cb(new Error("?dir:Missing Directory"));
               } else if (err) {
                 cb(err)
+              } else if (stat.permissions >= 0o40000 && stat.permissions < 0o50000) {
+                // Checks the permissions to ensure it is a directory
+                debugSFTP("Directory Exists: " + dir)
+                cb(null, sftp, dir)
               } else {
-                session.ssh.dir = dir
-                debugSFTP("Verified Directory: " + dir)
-                cb(null)
+                debugSFTP("Path is not a directory!")
+                cb(new Error("?dir:Not A Directory"))
               }
             });
           } else {
-            cb(null);
+            cb(null, sftp);
           }
+        },
+
+        // Check the user can open the directory
+        function(sftp, dir, cb) {
+          cb(null)
         }
       ],
 
