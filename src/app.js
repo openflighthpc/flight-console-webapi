@@ -87,9 +87,7 @@ apiRouter.get('/ssh/host/:host?', function (req, res, next) {
   debug('APP setting session variables: %O %O', req.params, req.query);
 
   // capture, assign, and validated variables
-  req.session.unverified_dir = (
-    (req.query.dir + '').match(/^[0-9a-zA-Z_ ./-]*$/) && req.query.dir
-  ) || null
+  req.session.unverified_dir = req.query.dir;
 
   req.session.ssh = {
     host: (validator.isIP(req.params.host + '') && req.params.host) ||

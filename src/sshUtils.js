@@ -49,7 +49,8 @@ function checkAuthentication(session) {
 
         // Resolve the unverified_dir to an absolute path
         function(sftp, cb) {
-          if (session.unverified_dir) {
+          const d = session.unverified_dir
+          if (d && d.match(/^[0-9a-zA-Z_ u./-]*$/)) {
             debugSFTP("Resolving: " + session.unverified_dir);
             sftp.realpath(session.unverified_dir, (err, dir) => {
               if (err) {
@@ -59,6 +60,9 @@ function checkAuthentication(session) {
                 cb(null, sftp, dir);
               }
             });
+          } else if (d) {
+            debugSFTP("Invalid dir: " + d)
+            cb(new Error("?dir:Invalid Characters"));
           } else {
             // Trigger the next callback without a dir
             cb(null, sftp, null)
