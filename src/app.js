@@ -85,9 +85,10 @@ apiRouter.get('/ping', function(req, res, next) {
 // eslint-disable-next-line complexity
 apiRouter.get('/ssh/host/:host?', function (req, res, next) {
   debug('APP setting session variables: %O %O', req.params, req.query);
-  // capture, assign, and validated variables
+
+  req.session.requestedDir = req.query.dir;
+
   req.session.ssh = {
-    dir: ((req.query.dir + '').match(/^[0-9a-zA-Z_ ./-]*$/) && req.query.dir) || null,
     host: (validator.isIP(req.params.host + '') && req.params.host) ||
       (validator.isFQDN(req.params.host) && req.params.host) ||
       (/^(([a-z]|[A-Z]|[0-9]|[!^(){}\-_~])+)?\w$/.test(req.params.host) &&
@@ -109,10 +110,27 @@ apiRouter.get('/ssh/host/:host?', function (req, res, next) {
   }
 
   checkAuthentication(req.session)
-    .then(() => { res.status(200).send('OK') })
+    .then(() => { res.status(200).send({
+      pwd: req.session.ssh.pwd,
+      cwd: req.session.ssh.cwd || req.session.ssh.pwd
+    }) })
     .catch((err) => {
       debug('checkAuthentication failed: %o', err);
-      if (err.level === 'client-authentication') {
+      const dir_regex = /^\?dir:/;
+      if (err.message === 'Unexpected packet before version') {
+        res
+          .status(422)
+          .header('Content-Type', 'application/json')
+          .send(JSON.stringify( { errors: [ {
+            code: 'Unexpected SFTP STDOUT', recoverable: true
+          }]}))
+      } else if (err.message.match(dir_regex)) {
+        res.status(422)
+           .header('Content-Type', 'application/json')
+           .send(JSON.stringify({ errors: [{
+             code: err.message.substring(5), recoverable: true
+           }]}));
+      } else if (err.level === 'client-authentication') {
         res
           .status(422)
           .header('Content-Type', 'application/json')

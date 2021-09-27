@@ -78,55 +78,12 @@ module.exports = function socket (socket) {
           );
           socket.emit('status', 'SSH CONNECTION ESTABLISHED');
 
-          waterfall(null, null);
+          waterfall(null);
         })
       },
 
-      // Determine if the requested directory exists using SFTP
-      // This prevents broken 'cd' commands being written to the terminal
-      //
-      // Currently the directory will be ignored if one of the following
-      // conditions are reached:
-      //
-      // * The directory does not exist,
-      // * There is a file permissions issue, or
-      // * SFTP failing due to the user's non-interactive shell writing to STDOUT.
-      //
-      // NOTE: Technically all SFTP errors could cause it to fail, however
-      //       it reuses the current SSH connection. So this is unlikely to cause
-      //       an issue.
-      function(_, waterfall) {
-        if (sshConfig.dir) {
-          debug("SFTP CHECK DIR: " + sshConfig.dir);
-          conn.sftp(function(err, sftp) {
-            if (err) {
-              debug('SFTP CHECK ERROR: ' + err);
-              waterfall(null, null);
-            } else {
-              sftp.opendir(sshConfig.dir, function(err, _buffer) {
-                // Assumable the directory does not exist
-                // TODO: Check permissions issues?
-                if (err) {
-                  debug("Requested directory: " + sshConfig.dir);
-                  debug(err);
-                  waterfall(null, null);
-
-                // The directory does exist
-                } else {
-                  waterfall(null, sshConfig.dir);
-                }
-              })
-            }
-          });
-
-        // Skip SFTP if the directory isn't given
-        } else {
-          waterfall(null, null);
-        }
-      },
-
       // Establish the SSH connection in a PTY
-      function(working_dir, waterfall) {
+      function(waterfall) {
         conn.shell({
           term: sshConfig.term,
           cols: termCols,
@@ -138,8 +95,8 @@ module.exports = function socket (socket) {
           }
 
           // Move to the given directory (if given)
-          if (working_dir) {
-            stream.write(`cd "${working_dir}"\n`);
+          if (session.ssh.cwd) {
+            stream.write(`cd "${session.ssh.cwd}"\n`);
           }
 
           socket.on('data', function socketOnData (data) {

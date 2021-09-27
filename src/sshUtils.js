@@ -1,17 +1,42 @@
 'use strict'
 
+const util = require('util')
 const SSH = require('ssh2').Client;
-const debugSSH = require('debug')('ssh2');
+const debug = require('debug');
+const debugSSH = debug('ssh2');
+const async = require('async');
+
+const DirectoryChecker = require('./directoryChecker');
 
 function checkAuthentication(session) {
   const result = new Promise((resolve, reject) => {
     let rejected = false;
     const conn = new SSH();
 
-    conn.on('ready', () => {
+    const close_connection = (error) => {
+      debugSSH(error);
       conn.end();
-      resolve();
+      reject(error);
+    }
+
+    const checker = new DirectoryChecker(conn, session.requestedDir);
+    conn.on('ready', () => {
+      debug('SSH connection ready. Checking directory.');
+      checker.checkDirectory((err, pwd, cwd) => {
+          conn.end()
+          if (err) {
+            // Handle unexpected errors
+            debug("The following error occurred checking the requested directory:");
+            debug(err);
+            reject(err);
+          } else {
+            session.ssh.pwd = pwd;
+            session.ssh.cwd = cwd;
+            resolve();
+          }
+      });
     });
+
     conn.on('error', reject);
     const options = {
       ...connectionOptions(session),
