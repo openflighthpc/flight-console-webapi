@@ -27,10 +27,18 @@ ENV['HOME'] = PASSWD.dir
 ENV['USER'] = USER
 ENV['LOGNAME'] = USER
 
+# Ensure the .ssh directory exists
+DIR = File.expand_path '~/.ssh'
+$stderr.puts DIR
+$stderr.puts File.exists? DIR
+FileUtils.mkdir(DIR, mode: 0700) unless Dir.exists? DIR
+
 # Ensure authorized_keys exists
 PATH = File.expand_path('~/.ssh/authorized_keys')
-FileUtils.mkdir_p File.dirname(PATH)
-FileUtils.touch PATH
+unless File.exists? PATH
+  FileUtils.touch PATH
+  FileUtils.chmod 0600, PATH
+end
 
 # Add the key
 File.open(PATH, 'r+') do |file|
