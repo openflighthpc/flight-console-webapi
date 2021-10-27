@@ -149,76 +149,29 @@ apiRouter.get('/ssh/host/:host?', function (req, res, next) {
 // NOTE: The service is pre-configured with the public key
 // It does not accept a key from the user by design
 apiRouter.put('/ssh/authorized_key', function(req, res, next) {
-  var args = ['-e', `require 'json'; require 'etc'; puts Etc.getpwnam('${req.session.username}').to_h.to_json`]
-  var child = spawnSync(config.ruby, args, { 'env': {}, 'shell': false, 'serialization': 'json' })
-  if (child.error || child.status !== 0) {
-    debug("Could not determine the users home directory");
-    debug(
-      child.error ? child.error.toString() : child.stderr.toString('utf8')
-    );
-    res.statusCode = 500;
-    res.end("Failed to locate your authorized_keys");
-    return
+  const args = [
+    `${__dirname}/../libexec/add_key.rb`, req.session.username, public_key
+  ];
+  const child = spawnSync(config.ruby, args, { 'env': {}, 'shell': false });
+  debug(`Ran add_key.rb`);
+  debug("STATUS:");
+  debug(child.status);
+  if (child.stdout != null) {
+    debug("STDOUT:");
+    debug(child.stdout.toString('utf8'));
   }
-
-  // Determine the user's authorized_keys file
-  var stdout = JSON.parse(child.stdout.toString('utf8'));
-  debug(stdout);
-  var keys_path = path.join(stdout.dir, '.ssh', 'authorized_keys');
-  var uid = stdout.uid;
-  var gid = stdout.gid;
-  debug("Determined the user's home/uid/guid")
-
-  // Applies they key to the file
-  res.statusCode = 500; // Default to an error has occurred
-  async.waterfall(
-    [
-      // Reads the keys file
-      function(c) {
-        fs.readFile(keys_path, 'utf8', function(err, keys) {
-          if (err && err.code === 'ENOENT') {
-            fs.closeSync(fs.openSync(keys_path, 'w'));
-            fs.chownSync(keys_path, uid, gid);
-            c(null, '');
-          } else if (err) {
-            debug("Could not read: " + keys_path);
-            debug(err);
-            c("Failed to read your authorized_keys", null);
-          } else if (keys.includes(public_key)) {
-            res.statusCode = 200;
-            c("Your authorized_keys have not been changed");
-          } else {
-            c(null, keys);
-          }
-        })
-      },
-
-      // Updates the keys file
-      function(keys, c) {
-        // Appends the public_key to the existing keys ensure it nicely padded with newlines
-        if (keys.slice(-1)[0] != "\n") {
-          keys = keys.concat("\n");
-        }
-        keys = keys.concat(public_key)
-        if (keys.slice(-1)[0] != "\n") {
-          keys = keys.concat("\n");
-        }
-        fs.writeFile(keys_path, keys, function(err) {
-          if (err) {
-            debug("Could not write: " + keys_path);
-            debug(err);
-            res.end("Failed to update your authorized_keys");
-          } else {
-            res.statusCode = 200
-            c("Updated your authorized_keys", true)
-          }
-        })
-      }
-    ],
-    function(msg, _) {
-      res.end(msg);
-    }
-  )
+  if (child.stdout != null) {
+    debug("STDERR:");
+    debug(child.stderr.toString('utf8'));
+  }
+  if (child.status === 0) {
+    res.statusCode = 200;
+    res.end(child.stdout.toString('utf8'));;
+  } else {
+    debug("Failed to add the authorized_keys");
+    res.statusCode = 500;
+    res.end("Failed to add the key");
+  }
 });
 
 app.use('/', apiRouter);
