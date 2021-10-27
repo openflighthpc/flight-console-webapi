@@ -151,22 +151,27 @@ apiRouter.get('/ssh/host/:host?', function (req, res, next) {
 apiRouter.put('/ssh/authorized_key', function(req, res, next) {
   const args = [
     `${__dirname}/../libexec/add_key.rb`, req.session.username, public_key
-  ]
-  var child = spawnSync(config.ruby, args, { 'env': {}, 'shell': false })
-  debug(`Ran add_key.rb`)
-  debug("STDOUT:")
-  debug(child.stdout.toString('utf8'))
-  debug("STDERR:")
-  debug(child.stderr.toString('utf8'))
+  ];
+  const child = spawnSync(config.ruby, args, { 'env': {}, 'shell': false });
+  debug(`Ran add_key.rb`);
+  debug("STATUS:");
+  debug(child.status);
+  if (child.stdout != null) {
+    debug("STDOUT:");
+    debug(child.stdout.toString('utf8'));
+  }
+  if (child.stdout != null) {
+    debug("STDERR:");
+    debug(child.stderr.toString('utf8'));
+  }
   if (child.status === 0) {
-    res.statusCode = 200
-    res.end(child.stdout.toString('utf8'));
+    res.statusCode = 200;
+    res.end(child.stdout.toString('utf8'));;
   } else {
     debug("Failed to add the authorized_keys");
     res.statusCode = 500;
     res.end("Failed to add the key");
   }
-  return
 });
 
 app.use('/', apiRouter);
