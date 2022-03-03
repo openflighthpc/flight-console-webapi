@@ -84,7 +84,7 @@ apiRouter.get('/ping', function(req, res, next) {
 
 // eslint-disable-next-line complexity
 apiRouter.get('/ssh/host/:host?', function (req, res, next) {
-  const populator = new SessionPopulator(req, config, private_key).populate();
+  const populator = new SessionPopulator(config, private_key).populate(req);
 
   checkAuthentication(req.session)
     .then(() => { res.status(200).send({

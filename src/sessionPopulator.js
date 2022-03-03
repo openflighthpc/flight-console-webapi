@@ -5,19 +5,18 @@ const debug = require('debug')('flight:console');
 
 // Populates the session from the request and server configuration.
 class SessionPopulator {
-  constructor(req, config, privateKey) {
-    this.req = req;
+  constructor(config, privateKey) {
     this.config = config;
     this.privateKey = privateKey;
   }
 
-  populate() {
-    debug('Populating session: params=%O query=%O', this.req.params, this.req.query);
+  populate(req) {
+    debug('Populating session: params=%O query=%O', req.params, req.query);
 
-    this.req.session.requestedDir = this.req.query.dir;
-    this.req.session.ssh = {
-      host: this.determineHost(),
-      port: this.determinePort(),
+    req.session.requestedDir = req.query.dir;
+    req.session.ssh = {
+      host: this.determineHost(req),
+      port: this.determinePort(req),
       privateKey: this.privateKey,
       localAddress: this.config.ssh.localAddress,
       localPort: this.config.ssh.localPort,
@@ -25,19 +24,19 @@ class SessionPopulator {
       keepaliveInterval: this.config.ssh.keepaliveInterval,
       keepaliveCountMax: this.config.ssh.keepaliveCountMax,
       allowedSubnets: this.config.ssh.allowedSubnets,
-      term: this.determineTerm(),
-      mrhsession: this.determineMrhsession(),
-      readyTimeout: this.determineReadyTimeout(),
+      term: this.determineTerm(req),
+      mrhsession: this.determineMrhsession(req),
+      readyTimeout: this.determineReadyTimeout(req),
     };
     debug(
       'Populated session: requestedDir=%O ssh=%O',
-      this.req.session.requestedDir,
-      {...this.req.session.ssh, privateKey: "[REDACTED]"},
+      req.session.requestedDir,
+      {...req.session.ssh, privateKey: "[REDACTED]"},
     );
   }
 
-  determineHost() {
-    const requested = this.req.params.host;
+  determineHost(req) {
+    const requested = req.params.host;
     if (requested && hostIsValid(requested)) {
       return requested;
     } else {
@@ -45,8 +44,8 @@ class SessionPopulator {
     }
   }
 
-  determinePort() {
-    const requested = this.req.query.port;
+  determinePort(req) {
+    const requested = req.query.port;
     if (requested && validator.isInt(requested, {min: 1, max: 65535})) {
       return requested; 
     } else {
@@ -54,8 +53,8 @@ class SessionPopulator {
     }
   }
 
-  determineTerm() {
-    const requested = this.req.query.sshterm;
+  determineTerm(req) {
+    const requested = req.query.sshterm;
     const regexp = /^(([a-z]|[A-Z]|[0-9]|[!^(){}\-_~])+)?\w$/;
     if (requested && regexp.test(requested) ) {
       return requested;
@@ -64,8 +63,8 @@ class SessionPopulator {
     }
   }
 
-  determineMrhsession() {
-    const requested = this.req.headers.mrhsession;
+  determineMrhsession(req) {
+    const requested = req.headers.mrhsession;
     if (requested && validator.isAlphanumeric(requested)) {
       return requested;
     } else {
@@ -73,8 +72,8 @@ class SessionPopulator {
     }
   }
 
-  determineReadyTimeout() {
-    const requested = this.req.query.readyTimeout;
+  determineReadyTimeout(req) {
+    const requested = req.query.readyTimeout;
     if (requested && validator.isInt(requested, { min: 1, max: 300000 })) {
       return requested;
     } else {
