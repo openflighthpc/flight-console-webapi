@@ -8,7 +8,6 @@ const express = require('express');
 const http = require('http');
 const logger = require('morgan');
 const socketIO = require('socket.io');
-const validator = require('validator');
 const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
@@ -21,6 +20,7 @@ const config = require('./config').config;
 const expressOptions = require('./expressOptions')
 const sshConnection = require('./sshConnection')
 const ShutdownGuard = require('./shutdownGuard');
+const SessionPopulator = require('./sessionPopulator');
 
 const apiRouter = express.Router();
 
@@ -45,7 +45,7 @@ if (fs.existsSync(config.sso.shared_secret_path)) {
   throw "Could not locate shared secret: " + config.sso.shared_secret_path
 }
 
-// Ensures the private_key exists
+// Ensures the privateKey exists
 var private_key
 if (fs.existsSync(config.ssh.private_key_path)) {
   console.log("Using private key: " + config.ssh.private_key_path)
@@ -84,30 +84,7 @@ apiRouter.get('/ping', function(req, res, next) {
 
 // eslint-disable-next-line complexity
 apiRouter.get('/ssh/host/:host?', function (req, res, next) {
-  debug('APP setting session variables: %O %O', req.params, req.query);
-
-  req.session.requestedDir = req.query.dir;
-
-  req.session.ssh = {
-    host: (validator.isIP(req.params.host + '') && req.params.host) ||
-      (validator.isFQDN(req.params.host + '') && req.params.host) ||
-      (/^(([a-z]|[A-Z]|[0-9]|[!^(){}\-_~])+)?\w$/.test(req.params.host) &&
-      req.params.host) || config.ssh.host,
-    port: (validator.isInt(req.query.port + '', { min: 1, max: 65535 }) &&
-      req.query.port) || config.ssh.port,
-    privateKey: private_key,
-    localAddress: config.ssh.localAddress,
-    localPort: config.ssh.localPort,
-    algorithms: config.algorithms,
-    keepaliveInterval: config.ssh.keepaliveInterval,
-    keepaliveCountMax: config.ssh.keepaliveCountMax,
-    allowedSubnets: config.ssh.allowedSubnets,
-    term: (/^(([a-z]|[A-Z]|[0-9]|[!^(){}\-_~])+)?\w$/.test(req.query.sshterm) &&
-      req.query.sshterm) || config.ssh.term,
-    mrhsession: ((validator.isAlphanumeric(req.headers.mrhsession + '') && req.headers.mrhsession) ? req.headers.mrhsession : 'none'),
-    readyTimeout: (validator.isInt(req.query.readyTimeout + '', { min: 1, max: 300000 }) &&
-      req.query.readyTimeout) || config.ssh.readyTimeout
-  }
+  const populator = new SessionPopulator(req, config, private_key).populate();
 
   checkAuthentication(req.session)
     .then(() => { res.status(200).send({
