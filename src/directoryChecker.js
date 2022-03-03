@@ -92,13 +92,13 @@ class DirectoryChecker {
         if (err && err.message == "No such file") {
           cb(new Error("?dir:Missing Directory"));
         } else if (err) {
-          cb(err)
-        } else if (stat.permissions >= 0o40000 && stat.permissions < 0o50000) {
-          debug("Directory exists: " + dir)
-          cb(null, sftp, dir)
+          cb(err);
+        } else if (stat.isDirectory()) {
+          debug("Directory exists: " + dir);
+          cb(null, sftp, dir);
         } else {
-          debug("Path is not a directory! " + stat.permissions.toString(8))
-          cb(new Error("?dir:Not A Directory"))
+          debug("Path is not a directory.");
+          cb(new Error("?dir:Not A Directory"));
         }
       });
     } else {
