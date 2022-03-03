@@ -3,11 +3,36 @@
 const validator = require('validator');
 const debug = require('debug')('flight:console');
 
+class RoundRobinHostConfig {
+  constructor(hosts) {
+    this.hosts = hosts;
+    this.idx = -1;
+  }
+
+  advance() {
+    if (this.idx > this.hosts.length - 1) {
+      this.idx = -1;
+    }
+    this.idx++;
+  }
+
+  get() {
+    const hostConfig = this.hosts[this.idx];
+    debug('Round robin to host idx=%d config=%O', this.idx, hostConfig);
+    return hostConfig;
+  }
+}
+
 // Populates the session from the request and server configuration.
 class SessionPopulator {
+  static roundRobin = null;
+
   constructor(config, privateKey) {
     this.config = config;
     this.privateKey = privateKey;
+    this.constructor.roundRobin = this.constructor.roundRobin ||
+      new RoundRobinHostConfig(config.ssh.hosts);
+    this.roundRobin = this.constructor.roundRobin;
   }
 
   populate(req) {
@@ -15,8 +40,7 @@ class SessionPopulator {
 
     req.session.requestedDir = req.query.dir;
     req.session.ssh = {
-      host: this.determineHost(req),
-      port: this.determinePort(req),
+      ...this.determineHostAndPort(req),
       privateKey: this.privateKey,
       localAddress: this.config.ssh.localAddress,
       localPort: this.config.ssh.localPort,
@@ -35,21 +59,14 @@ class SessionPopulator {
     );
   }
 
-  determineHost(req) {
-    const requested = req.params.host;
-    if (requested && hostIsValid(requested)) {
-      return requested;
+  determineHostAndPort(req) {
+    const requestedHost = req.params.host;
+    if (requestedHost && this.hostIsValid(requestedHost)) {
+      const hostConfig = this.config.ssh.hosts.find(hc => hc.host === requestedHost);
+      return hostConfig || {host: requestedHost, port: null};
     } else {
-      return this.config.ssh.host;
-    }
-  }
-
-  determinePort(req) {
-    const requested = req.query.port;
-    if (requested && validator.isInt(requested, {min: 1, max: 65535})) {
-      return requested; 
-    } else {
-      return this.config.ssh.port;
+      this.roundRobin.advance();
+      return this.roundRobin.get();
     }
   }
 

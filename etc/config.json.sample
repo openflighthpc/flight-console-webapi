@@ -6,8 +6,9 @@
   "ruby": "/opt/flight/bin/ruby",
   "pidfile": "/tmp/console-api.pid",
   "ssh": {
-    "host": null,
-    "port": 22,
+    "hosts": [
+      { "host": null, "port": 22 },
+    ],
     "private_key_path": "./etc/id_rsa",
     "public_key_path": "./etc/id_rsa.pub",
     "localAddress": null,
