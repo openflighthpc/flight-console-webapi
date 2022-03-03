@@ -99,8 +99,8 @@ class SessionPopulator {
   }
 
   hostIsValid(host) {
-    return validator.isIP(host + '') ||
-      validator.isFQDN(host + '') ||
+    return validator.isIP(host) ||
+      validator.isFQDN(host) ||
       /^(([a-z]|[A-Z]|[0-9]|[!^(){}\-_~])+)?\w$/.test(host);
   }
 }
