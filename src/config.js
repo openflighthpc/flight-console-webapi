@@ -15,8 +15,9 @@ const defaultConfig = {
   ruby: '/opt/flight/bin/ruby',
   pidfile: null,
   ssh: {
-    host: null,
-    port: 22,
+    hosts: [
+      { host: null, port: 22 }
+    ],
     private_key_path: path.join(configPath, '..', 'id_rsa'),
     public_key_path: path.join(configPath, '..', 'id_rsa.pub'),
     term: 'xterm-color',

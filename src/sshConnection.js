@@ -2,17 +2,20 @@
 'use strict'
 /* jshint esversion: 6, asi: true, node: true */
 
+const CIDRMatcher = require('cidr-matcher')
+const SSH = require('ssh2').Client
 const async = require('async');
 const debug = require('debug')('flight:console')
-const SSH = require('ssh2').Client
-const CIDRMatcher = require('cidr-matcher')
+const dns = require('dns');
+const util = require('util');
 
 const sshUtils = require('./sshUtils');
 
+const dnsLookup = util.promisify(dns.lookup);
 let termCols, termRows;
 
 // If configured, check that the requsted host is in a permitted subnet.
-function isHostAllowed(sshConfig) {
+async function isHostAllowed(sshConfig) {
   const allowedSubnets = sshConfig.allowedSubnets || [];
 
   if (allowedSubnets.length < 1) {
@@ -20,13 +23,18 @@ function isHostAllowed(sshConfig) {
     return true
   }
 
+  const hostIp = (await dnsLookup(sshConfig.host)).address;
+  debug(
+    "Validating host matches allowedSubnets: host=%s IP=%s allowedSubnets=%O",
+    sshConfig.host, hostIp, allowedSubnets,
+  );
   const matcher = new CIDRMatcher(allowedSubnets)
-  const allowed = matcher.contains(sshConfig.host);
+  const allowed = matcher.contains(hostIp);
   return allowed;
 }
 
 // public
-module.exports = function socket (socket) {
+module.exports = async function socket (socket) {
   // If a websocket connection arrives without an express session, kill it.
   if (!socket.request.session) {
     socket.emit('401 UNAUTHORIZED')
@@ -38,7 +46,7 @@ module.exports = function socket (socket) {
   const session = socket.request.session;
   const sshConfig = session.ssh || {};
 
-  if (!isHostAllowed(sshConfig)) {
+  if (! await isHostAllowed(sshConfig)) {
     console.log(
       'Flight console ' +
       'error: Requested host outside configured subnets / REJECTED'.red.bold +
