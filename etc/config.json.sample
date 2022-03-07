@@ -7,7 +7,7 @@
   "pidfile": "/tmp/console-api.pid",
   "ssh": {
     "hosts": [
-      { "host": null, "port": 22 },
+      { "host": null, "port": 22 }
     ],
     "private_key_path": "./etc/id_rsa",
     "public_key_path": "./etc/id_rsa.pub",
