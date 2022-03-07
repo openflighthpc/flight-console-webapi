@@ -10,10 +10,10 @@ class RoundRobinHostConfig {
   }
 
   advance() {
-    if (this.idx > this.hosts.length - 1) {
-      this.idx = -1;
-    }
     this.idx++;
+    if (this.idx > this.hosts.length - 1) {
+      this.idx = 0;
+    }
   }
 
   get() {
