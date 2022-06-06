@@ -18,7 +18,7 @@ const auth = require('./auth')
 const checkAuthentication = require('./sshUtils').checkAuthentication;
 const config = require('./config').config;
 const expressOptions = require('./expressOptions')
-const sshConnection = require('./sshConnection')
+const SshSession = require('./sshSession')
 const ShutdownGuard = require('./shutdownGuard');
 const SessionPopulator = require('./sessionPopulator');
 
@@ -179,7 +179,13 @@ io.use(function (socket, next) {
 })
 
 // bring up socket
-io.on('connection', sshConnection)
+io.on('connection', async (socket) => {
+  const sshSession = new SshSession(socket);
+  const isOK = await (sshSession.preFlightChecks());
+  if (isOK) {
+    sshSession.connect();
+  }
+});
 
 const shutdownGuard = new ShutdownGuard(io, server, config.safeShutdownDuration);
 
