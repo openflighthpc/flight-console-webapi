@@ -7,13 +7,16 @@ class ShutdownGuard {
     this.safeShutdownDuration = safeShutdownDuration;
     this.connectionCount = 0;
     this.isShuttingDown = false;
+    this.sockets = {};
   }
 
-  onConnection() {
+  onConnection(socket) {
+    this.sockets[socket.id] = socket;
     this.connectionCount++;
   }
 
-  onDisconnection() {
+  onDisconnection(socket) {
+    delete this.sockets[socket.id];
     this.connectionCount--;
     if ((this.connectionCount <= 0) && this.isShuttingDown) {
       this.stop('All clients disconnected')
@@ -55,6 +58,11 @@ class ShutdownGuard {
     if (this.shutdownInterval) {
       clearInterval(this.shutdownInterval);
     }
+
+    Object.values(this.sockets).forEach((socket) => {
+      socket.disconnect(true);
+    });
+
     this.io.close();
     this.server.close();
     process.exit(0);

@@ -198,10 +198,10 @@ function safeShutdownGuard (req, res, next) {
 }
 
 io.on('connection', function (socket) {
-  shutdownGuard.onConnection();
+  shutdownGuard.onConnection(socket);
 
   socket.on('disconnect', function () {
-    shutdownGuard.onDisconnection();
+    shutdownGuard.onDisconnection(socket);
   })
 })
 
