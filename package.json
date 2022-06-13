@@ -32,39 +32,26 @@
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "debug": "^4.3.3",
-    "express": "~4.17.3",
+    "express": "~4.18.1",
     "express-session": "~1.17.0",
     "jsonwebtoken": "^8.5.1",
     "morgan": "~1.10.0",
     "read-config-ng": "^3.0.3",
     "serve-favicon": "^2.5.0",
     "socket.io": "2.4.0",
-    "ssh2": "~1.6.0",
+    "ssh2": "~1.11.0",
     "validator": "^13.7.0"
   },
   "scripts": {
     "start": "node src/index.js",
     "test": "snyk test",
     "watch": "nodemon src/index.js",
-    "standard": "standard --verbose --fix | snazzy",
-    "cleanmac": "find . -name '.DS_Store' -type f -delete",
-    "release": "standard-version"
-  },
-  "standard": {
-    "ignore": [
-      "bigip/*",
-      "screenshots/*",
-      "bin/*",
-      "build/*",
-      "workspace/*"
-    ]
+    "cleanmac": "find . -name '.DS_Store' -type f -delete"
   },
   "devDependencies": {
     "nodaemon": "0.0.5",
     "nodemon": "^2.0.15",
     "pryjs": "^1.0.3",
-    "snazzy": "^9.0.0",
-    "standard": "^16.0.4",
-    "standard-version": "^9.3.2"
+    "snazzy": "^9.0.0"
   }
 }
