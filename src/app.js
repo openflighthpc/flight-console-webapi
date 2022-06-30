@@ -178,12 +178,23 @@ io.use(function (socket, next) {
     : next(next)
 })
 
-// bring up socket
+// Bring up socket
+
+// XXX This is a hack.  There should be a registry of HTTP sessions to SSH
+// sessions. Eventually we'd support multiple possible sessions per user, but
+// perhaps a single session per user is sufficient to start with.
+let sshSession;
+
 io.on('connection', async (socket) => {
-  const sshSession = new SshSession(socket);
-  const isOK = await (sshSession.preFlightChecks());
-  if (isOK) {
-    sshSession.connect();
+  if (sshSession) {
+    sshSession.reconnect(socket);
+
+  } else {
+    sshSession = new SshSession(socket);
+    const isOK = await (sshSession.preFlightChecks());
+    if (isOK) {
+      sshSession.connect();
+    }
   }
 });
 

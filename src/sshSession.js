@@ -73,6 +73,35 @@ class SshSession {
 
   }
 
+  // XXX Much of this is duplicated with other methods.  Perhaps we are
+  // missing an abstraction?  Should `SshSession` be composed of wrappers
+  // around, `this.socket`, `this.shellStream` and `this.conn`?
+  reconnect(socket) {
+    const id = this.socket.request.sessionID;
+    debug("Reconnecting to session %o", id);
+
+    this.socket = socket;
+    this.configureSocket();
+
+    this.socket.emit('status', 'SSH CONNECTION ESTABLISHED');
+
+    const self = this;
+    this.socket.on('resize', function socketOnResize (data) {
+      debug('resize: cols=%d rows=%d', data.cols, data.rows);
+      self.shellStream.setWindow(data.rows, data.cols);
+    })
+    this.socket.on('data', function socketOnData (data) {
+      self.shellStream.write(data)
+    })
+
+    this.socket.emit('status', 'SSH SHELL ESTABLISHED');
+
+    // XXX Hack to get the screen to redraw.  Probably a better way of doing
+    // that than sending a `resize` event.  If not, let's use the current
+    // size.
+    this.shellStream.setWindow(this.initialCols, this.initialRows);
+  }
+
   // Terminate the session and teardown all connections.
   terminateSession(message, prefix="") {
     this.socket.emit('ssherror', prefix + message);
@@ -125,8 +154,7 @@ class SshSession {
     })
 
     this.socket.on('disconnect', function socketOnDisconnect (reason) {
-      const err = { message: reason };
-      self.handleError('CLIENT SOCKET DISCONNECT', err);
+      debug('SOCKET DISCONNECT: ' + reason);
     })
 
     this.socket.on('error', function socketOnError (err) {
@@ -194,14 +222,16 @@ class SshSession {
         conn.end();
       }
 
+      self.shellStream = stream;
+
       self.socket.on('resize', function socketOnResize (data) {
         debug('resize: cols=%d rows=%d', data.cols, data.rows);
         stream.setWindow(data.rows, data.cols);
       })
 
       // Move to the given directory (if given).
-      if (self.session.ssh.cwd) {
-        stream.write(`cd "${self.session.ssh.cwd}"\n`);
+      if (self.sshConfig.cwd) {
+        stream.write(`cd "${self.sshConfig.cwd}"\n`);
       }
 
       self.socket.on('data', function socketOnData (data) {
