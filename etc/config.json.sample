@@ -9,8 +9,8 @@
     "hosts": [
       { "host": null, "port": 22 }
     ],
-    "private_key_path": "./etc/id_rsa",
-    "public_key_path": "./etc/id_rsa.pub",
+    "private_key_path": "./etc/flight_console_api_key",
+    "public_key_path": "./etc/flight_console_api_key.pub",
     "localAddress": null,
     "localPort": null,
     "term": "xterm-color",

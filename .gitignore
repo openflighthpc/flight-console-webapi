@@ -23,4 +23,4 @@ yarn-debug.log*
 yarn-error.log*
 etc/config.json
 etc/shared-secret.conf
-etc/id_rsa*
+etc/flight_console_api_key*

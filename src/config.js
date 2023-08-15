@@ -18,8 +18,8 @@ const defaultConfig = {
     hosts: [
       { host: null, port: 22 }
     ],
-    private_key_path: path.join(configPath, '..', 'id_rsa'),
-    public_key_path: path.join(configPath, '..', 'id_rsa.pub'),
+    private_key_path: path.join(configPath, '..', 'flight_console_api_key'),
+    public_key_path: path.join(configPath, '..', 'flight_console_api_key.pub'),
     term: 'xterm-color',
     readyTimeout: 20000,
     keepaliveInterval: 120000,
